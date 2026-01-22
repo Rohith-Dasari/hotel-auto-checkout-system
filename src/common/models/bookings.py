@@ -33,3 +33,22 @@ class Booking:
     scheduler_id: Optional[str] = None
 
     created_at: datetime = field(default_factory=datetime.now(timezone.utc))
+
+
+@dataclass
+class BookingRequest:
+    category: str
+    checkin: datetime
+    checkout: datetime
+    user_id: str
+    user_email: str
+
+
+@dataclass
+class BookingResponse:
+    booking_id: str
+    room_id: str
+    status: BookingStatus
+    checkin: datetime
+    checkout: datetime
+    invoice_url: Optional[str] = None

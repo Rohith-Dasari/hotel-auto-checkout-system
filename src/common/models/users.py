@@ -15,3 +15,7 @@ class User:
     name: str
     role: UserRole
 
+
+# @dataclass
+# class SignupRequest:
+#     user
