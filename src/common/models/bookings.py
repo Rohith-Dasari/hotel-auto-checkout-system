@@ -2,6 +2,7 @@ from enum import Enum
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional
+from src.common.models.rooms import Category
 
 
 class BookingStatus(str, Enum):
@@ -11,18 +12,13 @@ class BookingStatus(str, Enum):
 
 
 @dataclass
-class Category:
-    name: str
-    price_per_night: float
-
-
-@dataclass
 class Booking:
     booking_id: str
     user_id: str
     user_email: str
     room_id: str
-    category: str
+    room_no: int
+    category: Category
     checkin: datetime
     checkout: datetime
     status: BookingStatus = BookingStatus.UPCOMING
@@ -32,7 +28,7 @@ class Booking:
     invoice_url: Optional[str] = None
     scheduler_id: Optional[str] = None
 
-    created_at: datetime = field(default_factory=datetime.now(timezone.utc))
+    booked_at: datetime = field(default_factory=datetime.now(timezone.utc))
 
 
 @dataclass
@@ -40,8 +36,6 @@ class BookingRequest:
     category: str
     checkin: datetime
     checkout: datetime
-    user_id: str
-    user_email: str
 
 
 @dataclass

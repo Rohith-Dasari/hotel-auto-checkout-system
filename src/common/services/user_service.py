@@ -1,11 +1,11 @@
-from typing import Optional, Protocol
+from typing import Optional
 from src.common.models.users import User, UserRole
 from src.common.repository.user_repo import UserRepository
 from src.common.utils.custom_exceptions import (
     IncorrectCredentials,
     UserAlreadyExists,
     UserBlocked,
-    NotFoundException
+    NotFoundException,
 )
 import bcrypt
 import re

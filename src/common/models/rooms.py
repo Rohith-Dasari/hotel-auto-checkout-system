@@ -3,6 +3,18 @@ from typing import Optional
 from dataclasses import dataclass
 
 
+class Category(str, Enum):
+    DELUXE = "DELUXE"
+    SUITE = "SUITE"
+    STANDARD = "STANDARD"
+
+
+@dataclass
+class RoomType:
+    name: Category
+    price_per_night: float
+
+
 class RoomStatus(str, Enum):
     AVAILABLE = "AVAILABLE"
     OCCUPIED = "OCCUPIED"
@@ -13,6 +25,6 @@ class RoomStatus(str, Enum):
 @dataclass
 class Room:
     room_id: str
-    category: str
+    category: Category
     status: RoomStatus = RoomStatus.AVAILABLE
     floor: Optional[int] = None
