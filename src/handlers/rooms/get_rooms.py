@@ -7,7 +7,7 @@ from src.common.models.rooms import Category
 from src.common.utils.custom_exceptions import NoAvailableRooms
 from src.common.utils.custom_response import send_custom_response
 
-TABLE_NAME = os.environ.get("table_name")
+TABLE_NAME = os.environ.get("TABLE_NAME")
 
 dynamodb = resource("dynamodb", region_name="ap-south-1")
 table = dynamodb.Table(TABLE_NAME)

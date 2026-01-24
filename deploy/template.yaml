@@ -1,0 +1,176 @@
+Transform: AWS::Serverless-2016-10-31
+
+Globals:
+  Function:
+    Architectures:
+      - arm64
+    Timeout: 20
+    Runtime: python3.13
+    Environment:
+      Variables:
+        TABLE_NAME: hotel_checkout_system
+
+Resources:
+
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: v1
+      Cors:
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowOrigin: "'*'"
+      Auth:
+        DefaultAuthorizer: MyLambdaRequestAuth
+        Authorizers:
+          MyLambdaRequestAuth:
+            FunctionArn: !GetAtt AuthFunction.Arn
+            Identity:
+              Header: Authorization
+
+  AuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../src/handlers/auth
+      Handler: jwt_authorizer.lambda_handler
+      Policies:
+        - AWSLambdaBasicExecutionRole
+
+  SchedulerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: scheduler.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: AllowInvokeAutoCheckout
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !GetAtt AutoCheckoutFunction.Arn
+
+  LoginFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../src/handlers/auth
+      Handler: login.login_handler
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /login
+            Method: POST
+            RestApiId: !Ref ApiGateway
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: hotel_checkout_system
+
+  SignupFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../src/handlers/auth
+      Handler: signup.signup_handler
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /signup
+            Method: POST
+            RestApiId: !Ref ApiGateway
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: hotel_checkout_system
+
+  GetRoomsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../src/handlers/rooms
+      Handler: get_rooms.get_rooms
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /rooms
+            Method: GET
+            RestApiId: !Ref ApiGateway
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: hotel_checkout_system
+
+  UpdateRoomFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../src/handlers/rooms
+      Handler: update_room.update_room
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /rooms
+            Method: PUT
+            RestApiId: !Ref ApiGateway
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: hotel_checkout_system
+
+  CreateBookingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../src/handlers/bookings
+      Handler: create_booking.create_booking
+      Environment:
+        Variables:
+          AUTO_CHECKOUT_LAMBDA_ARN: !GetAtt AutoCheckoutFunction.Arn
+          SCHEDULER_ROLE_ARN: !GetAtt SchedulerRole.Arn
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /booking
+            Method: POST
+            RestApiId: !Ref ApiGateway
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: hotel_checkout_system
+        - Statement:
+            - Effect: Allow
+              Action:
+                - scheduler:CreateSchedule
+              Resource: "*"
+
+
+  ListBookingsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../src/handlers/bookings
+      Handler: get_bookings.get_user_bookings
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /bookings
+            Method: GET
+            RestApiId: !Ref ApiGateway
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: hotel_checkout_system
+
+  AutoCheckoutFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../src/handlers/checkout
+      Handler: auto_checkout.auto_checkout
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: hotel_checkout_system

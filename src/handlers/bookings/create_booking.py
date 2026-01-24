@@ -11,7 +11,9 @@ from src.common.models.bookings import BookingRequest
 from src.common.utils.custom_response import send_custom_response
 from src.common.utils.custom_exceptions import NotFoundException
 
-TABLE_NAME = os.environ.get("table_name")
+TABLE_NAME = os.environ.get("TABLE_NAME")
+AUTO_CHECKOUT_LAMBDA_ARN=os.environ.get("AUTO_CHECKOUT_LAMBDA_ARN")
+SCHEDULER_ROLE_ARN=os.environ.get("SCHEDULER_ROLE_ARN")
 
 dynamodb = resource("dynamodb", region_name="ap-south-1")
 table = dynamodb.Table(TABLE_NAME)
@@ -19,7 +21,7 @@ table = dynamodb.Table(TABLE_NAME)
 booking_repo = BookingRepository(table)
 user_repo = UserRepository(table)
 room_repo = RoomRepository(table)
-scheduler_service = SchedulerService()
+scheduler_service = SchedulerService(AUTO_CHECKOUT_LAMBDA_ARN,SCHEDULER_ROLE_ARN)
 
 booking_service = BookingService(
     booking_repo=booking_repo,
@@ -58,7 +60,6 @@ def create_booking(event, context):
             category=category,
             checkin=checkin,
             checkout=checkout,
-            user_id=user_id
         )
 
         booking_service.add_booking(req, user_id)

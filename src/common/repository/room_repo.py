@@ -52,7 +52,7 @@ class RoomRepository:
             room_ids.append(id)
         return room_ids
 
-    def get_category_price(self, category: Category) -> Optional[str]:
+    def get_category_price(self, category: Category) -> Optional[float]:
         try:
             response = self.table.get_item(
                 Key={"pk": f"CATEGORY#{category}", "sk": "DETAILS"}
@@ -63,7 +63,7 @@ class RoomRepository:
         item = response.get("Item")
         if not item:
             return None
-        return item["price"]
+        return float(item["price"])
 
     def update_room_status(self, room_id: str, status: RoomStatus):
         try:

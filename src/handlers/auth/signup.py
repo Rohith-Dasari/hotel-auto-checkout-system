@@ -5,7 +5,7 @@ from src.common.schemas.users import SignupRequest
 from src.common.utils.custom_response import send_custom_response
 from boto3 import resource
 
-TABLE_NAME = os.environ.get("checkout_system_db")
+TABLE_NAME = os.environ.get("TABLE_NAME")
 dynamodb = resource("dynamodb", region_name="ap-south-1")
 table = dynamodb.Table(TABLE_NAME)
 
@@ -13,7 +13,7 @@ repo = UserRepository(table=table)
 service = UserService(repo=repo)
 
 
-def signup(event, context):
+def signup_handler(event, context):
     request_body = SignupRequest.model_validate_json(event["body"])
     try:
         token = service.signup(

@@ -5,11 +5,10 @@ from src.common.repository.booking_repo import BookingRepository
 from src.common.repository.user_repo import UserRepository
 from src.common.repository.room_repo import RoomRepository
 from src.common.services.booking_service import BookingService
-from src.common.services.schedule_service import SchedulerService
 from src.common.utils.custom_response import send_custom_response
 from src.common.utils.custom_exceptions import NotFoundException
 
-TABLE_NAME = os.environ.get("table_name")
+TABLE_NAME = os.environ.get("TABLE_NAME")
 
 dynamodb = resource("dynamodb", region_name="ap-south-1")
 table = dynamodb.Table(TABLE_NAME)
@@ -17,13 +16,11 @@ table = dynamodb.Table(TABLE_NAME)
 booking_repo = BookingRepository(table)
 user_repo = UserRepository(table)
 room_repo = RoomRepository(table)
-scheduler_service = SchedulerService()
 
 booking_service = BookingService(
     booking_repo=booking_repo,
     user_repo=user_repo,
     room_repo=room_repo,
-    schedule_service=scheduler_service
 )
 
 
