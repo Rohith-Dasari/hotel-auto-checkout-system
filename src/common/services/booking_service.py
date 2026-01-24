@@ -1,6 +1,7 @@
 from src.common.repository.booking_repo import BookingRepository
 from src.common.models.bookings import BookingRequest, Booking, BookingStatus
 from src.common.models.rooms import Category
+from typing import List
 from src.common.models.users import User
 from src.common.repository.user_repo import UserRepository
 from src.common.repository.room_repo import RoomRepository
@@ -48,9 +49,10 @@ class BookingService:
         self.schedule_service.schedule_checkout(booking_id=booking_id,room_id=room_id,checkout_time=booking.checkout)
 
     def update_booking(self, booking_id: str, room_id: str):
-        booking = self.booking_repo.get_booking_by_id(booking)
+        booking = self.booking_repo.get_booking_by_id(booking_id)
         self.booking_repo.update_booking_status(
             booking_id=booking_id,
+            user_id=booking.user_id,
             room_id=room_id,
             status=BookingStatus.CHECKED_OUT,
         )
@@ -58,6 +60,12 @@ class BookingService:
         rooms=self.room_repo.get_available_rooms(category,req.checkin,req.checkout)
         if not rooms:
             raise NotFoundException("no available rooms for the category")
-        room_id = rooms[random.randint(0, len(rooms))]
+        room_id = random.choice(rooms)
         return room_id
+    
+    def get_user_bookings(self,user_id)->List[Booking]:
+        user=self.user_repo.get_by_id(user_id)
+        if not user:
+            NotFoundException(f"user {user_id} not found")
+        return self.booking_repo.get_user_bookings(user_id)
     

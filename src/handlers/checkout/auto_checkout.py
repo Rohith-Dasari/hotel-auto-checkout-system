@@ -6,7 +6,7 @@ from src.common.repository.room_repo import RoomRepository
 from src.common.services.room_service import RoomService
 from boto3 import resource
 
-TABLE_NAME = os.environ.get("checkout_system_db")
+TABLE_NAME = os.environ.get("table_name")
 dynamodb = resource("dynamodb", region_name="ap-south-1")
 table = dynamodb.Table(TABLE_NAME)
 
