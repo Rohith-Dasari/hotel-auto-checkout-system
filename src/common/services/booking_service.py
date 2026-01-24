@@ -8,7 +8,7 @@ from src.common.utils.custom_exceptions import NotFoundException
 from src.common.models.invoice import Invoice
 from src.common.services.schedule_service import SchedulerService
 from uuid import uuid4
-
+import random
 
 class BookingService:
     def __init__(
@@ -32,7 +32,7 @@ class BookingService:
         category = Category(req.category)
         price = self.room_repo.get_category_price(category)
         booking_id = str(uuid4())
-        room_id = self._allocate_room(category)
+        room_id = self._allocate_room(category,req)
         if not room_id:
             raise Exception("No rooms available")
         booking = Booking(
@@ -54,5 +54,10 @@ class BookingService:
             room_id=room_id,
             status=BookingStatus.CHECKED_OUT,
         )
-    def _allocate_room(category:str)->str:
-        pass
+    def _allocate_room(self,category:str,req:BookingRequest)->str:
+        rooms=self.room_repo.get_available_rooms(category,req.checkin,req.checkout)
+        if not rooms:
+            raise NotFoundException("no available rooms for the category")
+        room_id = rooms[random.randint(0, len(rooms))]
+        return room_id
+    

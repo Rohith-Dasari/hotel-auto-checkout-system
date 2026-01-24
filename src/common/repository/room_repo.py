@@ -5,6 +5,7 @@ from types_boto3_dynamodb import DynamoDBClient
 from typing import Optional, List
 from boto3.dynamodb.conditions import Key
 from src.common.models.rooms import Room, Category, RoomStatus
+from datetime import datetime
 
 
 logger = logging.getLogger(__name__)
@@ -79,5 +80,48 @@ class RoomRepository:
             logger.error(f"Error updating room {room_id} status: {err}")
             raise
 
-    def get_available_rooms(self, checkin_data: str):
-        pass
+    def get_available_rooms(
+        self,
+        category: Category,
+        checkin_date: str,
+        checkout_date: str
+    ) -> List[str]:
+
+        room_ids = self.get_rooms_ids_by_category(category)
+        if not room_ids:
+            return []
+
+        requested_checkin = datetime.fromisoformat(checkin_date)
+        requested_checkout = datetime.fromisoformat(checkout_date)
+
+        available_rooms = []
+
+        sk_upper_bound = f"CHECKIN#{requested_checkout}"
+
+        for room_id in room_ids:
+            try:
+                response = self.table.query(
+                    KeyConditionExpression=
+                        Key("pk").eq(f"ROOM#{room_id}") &
+                        Key("sk").lte(sk_upper_bound)
+                )
+            except ClientError as err:
+                logger.error(f"Error querying bookings for room {room_id}: {err}")
+                continue
+
+            bookings = response.get("Items", [])
+            is_available = True
+
+            for booking in bookings:
+                existing_checkout = datetime.fromisoformat(
+                    booking["checkout_date"]
+                )
+
+                if requested_checkin < existing_checkout:
+                    is_available = False
+                    break
+
+            if is_available:
+                available_rooms.append(room_id)
+
+        return available_rooms
