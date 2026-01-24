@@ -4,7 +4,7 @@ from src.common.models.rooms import Category
 from typing import List,Optional
 from src.common.repository.user_repo import UserRepository
 from src.common.repository.room_repo import RoomRepository
-from src.common.utils.custom_exceptions import NotFoundException
+from src.common.utils.custom_exceptions import NotFoundException,NoAvailableRooms
 from src.common.services.schedule_service import SchedulerService
 from uuid import uuid4
 import random
@@ -30,10 +30,12 @@ class BookingService:
             )
         category = Category(req.category)
         price = self.room_repo.get_category_price(category)
+        if price is None:
+            raise NotFoundException("category", category.value, 404)
+
+        price = float(price)
         booking_id = str(uuid4())
         room_id = self._allocate_room(category,req)
-        if not room_id:
-            raise Exception("No rooms available")
         booking = Booking(
             booking_id=booking_id,
             user_id=user_id,
@@ -42,6 +44,7 @@ class BookingService:
             checkin=req.checkin,
             checkout=req.checkout,
             price_per_night=price,
+            user_email=user.email,
         )
         self.booking_repo.add_booking(booking)
         self.schedule_service.schedule_checkout(booking_id=booking_id,user_id=user_id, room_id=room_id,checkout_time=booking.checkout)
@@ -56,13 +59,13 @@ class BookingService:
     def _allocate_room(self,category:Category,req:BookingRequest)->str:
         rooms=self.room_repo.get_available_rooms(category,req.checkin,req.checkout)
         if not rooms:
-            raise NotFoundException("no available rooms for the category")
+            raise NoAvailableRooms("no available rooms for the category")
         room_id = random.choice(rooms)
         return room_id
     
     def get_user_bookings(self,user_id)->List[Booking]:
         user=self.user_repo.get_by_id(user_id)
         if not user:
-            raise NotFoundException(f"user {user_id} not found")
+            raise NotFoundException("user", user_id, 404)
         return self.booking_repo.get_user_bookings(user_id)
     

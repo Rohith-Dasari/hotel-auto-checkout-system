@@ -29,14 +29,14 @@ class RoomRepository:
         if not item:
             return None
         return Room(
-            room_id, Category(category=item["category"]), status=item["room_status"]
+            room_id,category= Category(item["category"]), status=item["room_status"]
         )
 
     def get_rooms_ids_by_category(self, category: Category) -> List[str]:
         try:
             response = self.table.query(
                 KeyConditionExpression=(
-                    Key("pk").eq(f"CATEGORY#{category}")
+                    Key("pk").eq(f"CATEGORY#{category.value}")
                     & Key("sk").begins_with("ROOM#")
                 )
             )
@@ -55,7 +55,7 @@ class RoomRepository:
     def get_category_price(self, category: Category) -> Optional[float]:
         try:
             response = self.table.get_item(
-                Key={"pk": f"CATEGORY#{category}", "sk": "DETAILS"}
+                Key={"pk": f"CATEGORY#{category.value}", "sk": "DETAILS"}
             )
         except ClientError as err:
             logger.error(f"Error retrieving category {category} details: {err}")
@@ -96,15 +96,18 @@ class RoomRepository:
 
         available_rooms = []
 
-        sk_upper_bound = f"CHECKIN#{requested_checkout}"
+        sk_upper_bound = f"CHECKIN#{checkout_date}"
 
         for room_id in room_ids:
             try:
                 response = self.table.query(
                     KeyConditionExpression=
                         Key("pk").eq(f"ROOM#{room_id}") &
-                        Key("sk").lte(sk_upper_bound)
+                        Key("sk").lte(sk_upper_bound),
+                    ScanIndexForward=False,
+                    Limit=1
                 )
+
             except ClientError as err:
                 logger.error(f"Error querying bookings for room {room_id}: {err}")
                 continue

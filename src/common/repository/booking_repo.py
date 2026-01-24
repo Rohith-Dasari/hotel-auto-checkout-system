@@ -28,6 +28,7 @@ class BookingRepository:
             "room_id": booking.room_id,
             "price_per_night": booking.price_per_night,
             "booked_at": booking.booked_at,
+            "user_email": booking.user_email,
         }
 
         user_booking = {
@@ -40,6 +41,8 @@ class BookingRepository:
             "room_id": booking.room_id,
             "price_per_night": booking.price_per_night,
             "booked_at": booking.booked_at,
+            "user_email": booking.user_email,
+
         }
 
         room_booking = {
@@ -53,7 +56,7 @@ class BookingRepository:
         try:
             self.client.transact_write_items(
                 TransactItems=[
-                    {"Put": {"TableName": self.table.name, "Item": booking_item}},
+                    {"Put": {"TableName": self.table.name, "Item": booking_item,"ConditionExpression": "attribute_not_exists(pk)"}},
                     {"Put": {"TableName": self.table.name, "Item": user_booking}},
                     {"Put": {"TableName": self.table.name, "Item": room_booking}},
                 ]
@@ -90,6 +93,8 @@ class BookingRepository:
                 checkout=item["check_out"],
                 price_per_night=float(item["price_per_night"]),
                 booked_at=item["booked_at"],
+                user_email=item.get("user_email")
+
             )
             bookings.append(booking)
 
@@ -118,6 +123,8 @@ class BookingRepository:
             checkout=item["check_out"],
             price_per_night=float(item["price_per_night"]),
             booked_at=item["booked_at"],
+            user_email=item.get("user_email")
+
         )
 
     def update_booking_status(

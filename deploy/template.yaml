@@ -1,5 +1,10 @@
 Transform: AWS::Serverless-2016-10-31
 
+Parameters:
+  TableName:
+    Type: String
+    Default: hotel_checkout_system
+
 Globals:
   Function:
     Architectures:
@@ -8,7 +13,7 @@ Globals:
     Runtime: python3.13
     Environment:
       Variables:
-        TABLE_NAME: hotel_checkout_system
+        TABLE_NAME: !Ref TableName
 
 Resources:
 
@@ -36,6 +41,13 @@ Resources:
       Policies:
         - AWSLambdaBasicExecutionRole
 
+  AuthInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref AuthFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+
   SchedulerRole:
     Type: AWS::IAM::Role
     Properties:
@@ -54,7 +66,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - lambda:InvokeFunction
-                Resource: !GetAtt AutoCheckoutFunction.Arn
+                Resource: !Sub "${AutoCheckoutFunction.Arn}:*"
 
   LoginFunction:
     Type: AWS::Serverless::Function
@@ -72,7 +84,7 @@ Resources:
               Authorizer: NONE
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: hotel_checkout_system
+            TableName: !Ref TableName
 
   SignupFunction:
     Type: AWS::Serverless::Function
@@ -90,7 +102,7 @@ Resources:
               Authorizer: NONE
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: hotel_checkout_system
+            TableName: !Ref TableName
 
   GetRoomsFunction:
     Type: AWS::Serverless::Function
@@ -106,7 +118,7 @@ Resources:
             RestApiId: !Ref ApiGateway
       Policies:
         - DynamoDBReadPolicy:
-            TableName: hotel_checkout_system
+            TableName: !Ref TableName
 
   UpdateRoomFunction:
     Type: AWS::Serverless::Function
@@ -122,7 +134,7 @@ Resources:
             RestApiId: !Ref ApiGateway
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: hotel_checkout_system
+            TableName: !Ref TableName
 
   CreateBookingFunction:
     Type: AWS::Serverless::Function
@@ -142,13 +154,12 @@ Resources:
             RestApiId: !Ref ApiGateway
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: hotel_checkout_system
+            TableName: !Ref TableName
         - Statement:
             - Effect: Allow
               Action:
                 - scheduler:CreateSchedule
-              Resource: "*"
-
+              Resource: !Sub "arn:aws:scheduler:${AWS::Region}:${AWS::AccountId}:schedule/*"
 
   ListBookingsFunction:
     Type: AWS::Serverless::Function
@@ -164,7 +175,7 @@ Resources:
             RestApiId: !Ref ApiGateway
       Policies:
         - DynamoDBReadPolicy:
-            TableName: hotel_checkout_system
+            TableName: !Ref TableName
 
   AutoCheckoutFunction:
     Type: AWS::Serverless::Function
@@ -173,4 +184,11 @@ Resources:
       Handler: auto_checkout.auto_checkout
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: hotel_checkout_system
+            TableName: !Ref TableName
+
+  AutoCheckoutInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref AutoCheckoutFunction
+      Action: lambda:InvokeFunction
+      Principal: scheduler.amazonaws.com

@@ -17,7 +17,6 @@ class Booking:
     user_id: str
     user_email: str
     room_id: str
-    room_no: int
     category: Category
     checkin: datetime
     checkout: datetime
@@ -26,7 +25,6 @@ class Booking:
     price_per_night: float = 0.0
 
     invoice_url: Optional[str] = None
-    scheduler_id: Optional[str] = None
 
     booked_at: datetime = field(default_factory=datetime.now(timezone.utc))
 

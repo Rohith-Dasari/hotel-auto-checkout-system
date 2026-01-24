@@ -18,3 +18,6 @@ class NotFoundException(Exception):
 
 class NoAvailableRooms(Exception):
     pass
+
+class InvalidDates(Exception):
+    pass

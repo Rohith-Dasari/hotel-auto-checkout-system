@@ -39,7 +39,6 @@ class UserRepository:
                                 "phone_number": user.phone_number,
                                 "password": user.password,
                                 "role": user.role.value,
-                                "is_blocked": user.is_blocked,
                             },
                             "ConditionExpression": "attribute_not_exists(pk)",
                         }
@@ -97,6 +96,5 @@ class UserRepository:
             email=item["email"],
             phone_number=item.get("phone_number"),
             role=UserRole(item["role"]),
-            is_blocked=item["is_blocked"],
             password=item["password"],
         )

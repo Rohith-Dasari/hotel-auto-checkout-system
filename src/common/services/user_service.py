@@ -4,7 +4,6 @@ from src.common.repository.user_repo import UserRepository
 from src.common.utils.custom_exceptions import (
     IncorrectCredentials,
     UserAlreadyExists,
-    UserBlocked,
     NotFoundException,
 )
 import bcrypt
@@ -35,8 +34,6 @@ class UserService:
 
     def login(self, email: str, password: str) -> str:
         user = self.get_user_by_mail(email)
-        if user.is_blocked:
-            raise UserBlocked("user has been blocked, contact admin")
 
         if not bcrypt.checkpw(
             password.encode("utf-8"),
@@ -62,7 +59,6 @@ class UserService:
                 phone_number=phone,
                 password=hashed,
                 role=UserRole.CUSTOMER,
-                is_blocked=False,
             )
         )
         return create_jwt(user_id, email, UserRole.CUSTOMER.value)

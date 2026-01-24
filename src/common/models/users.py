@@ -12,5 +12,8 @@ class UserRole(Enum):
 class User:
     user_id: str
     email: str
-    name: str
+    username: str
     role: UserRole
+    password:str
+    phone_number:str
+    

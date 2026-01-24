@@ -4,17 +4,22 @@ from src.common.services.user_service import UserService
 from src.common.schemas.users import SignupRequest
 from src.common.utils.custom_response import send_custom_response
 from boto3 import resource
+from pydantic import ValidationError
 
 TABLE_NAME = os.environ.get("TABLE_NAME")
 dynamodb = resource("dynamodb", region_name="ap-south-1")
 table = dynamodb.Table(TABLE_NAME)
 
-repo = UserRepository(table=table)
-service = UserService(repo=repo)
+user_repo = UserRepository(table=table)
+service = UserService(repo=user_repo)
 
 
 def signup_handler(event, context):
-    request_body = SignupRequest.model_validate_json(event["body"])
+    try:
+        request_body = SignupRequest.model_validate_json(event["body"])
+    except ValidationError as e:
+        return send_custom_response(400, e.errors())
+    
     try:
         token = service.signup(
             request_body.email,

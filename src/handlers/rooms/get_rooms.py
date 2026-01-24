@@ -1,10 +1,11 @@
 import os
-import json
+from datetime import datetime
 from boto3 import resource
+
 from src.common.repository.room_repo import RoomRepository
 from src.common.services.room_service import RoomService
 from src.common.models.rooms import Category
-from src.common.utils.custom_exceptions import NoAvailableRooms
+from src.common.utils.custom_exceptions import NoAvailableRooms, InvalidDates
 from src.common.utils.custom_response import send_custom_response
 
 TABLE_NAME = os.environ.get("TABLE_NAME")
@@ -14,6 +15,14 @@ table = dynamodb.Table(TABLE_NAME)
 
 room_repo = RoomRepository(table)
 room_service = RoomService(room_repo=room_repo)
+
+
+def _validate_iso_date(date_str: str) -> bool:
+    try:
+        datetime.fromisoformat(date_str)
+        return True
+    except (ValueError, TypeError):
+        return False
 
 
 def get_rooms(event, context):
@@ -27,15 +36,22 @@ def get_rooms(event, context):
         if not category_raw or not checkin or not checkout:
             return send_custom_response(
                 400,
-                 "category, checkin and checkout are required"
+                "category, checkin and checkout are required"
+            )
+
+        if not _validate_iso_date(checkin) or not _validate_iso_date(checkout):
+            return send_custom_response(
+                400,
+                "checkin and checkout must be in ISO format: YYYY-MM-DD"
             )
 
         try:
             category = Category(category_raw)
         except ValueError:
+            allowed = ", ".join(c.value for c in Category)
             return send_custom_response(
                 400,
-                f"Invalid category. Allowed: {[c.value for c in Category]}"
+                f"Invalid category. Allowed: {allowed}"
             )
 
         rooms = room_service.get_available_rooms(
@@ -61,4 +77,16 @@ def get_rooms(event, context):
             404,
             str(err)
         )
-        
+
+    except InvalidDates as err:
+        return send_custom_response(
+            400,
+            str(err)
+        )
+
+    except Exception as err:
+        print("Unhandled error:", err)
+        return send_custom_response(
+            500,
+            "Internal server error"
+        )
