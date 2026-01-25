@@ -58,7 +58,10 @@ class BookingService:
             status=BookingStatus.CHECKED_OUT,
         )
     def _allocate_room(self,category:Category,req:BookingRequest)->str:
-        rooms=self.room_repo.get_available_rooms(category,req.checkin,req.checkout)
+        checkin_str = req.checkin.isoformat() if hasattr(req.checkin, "isoformat") else str(req.checkin)
+        checkout_str = req.checkout.isoformat() if hasattr(req.checkout, "isoformat") else str(req.checkout)
+
+        rooms=self.room_repo.get_available_rooms(category,checkin_str,checkout_str)
         if not rooms:
             raise NoAvailableRooms("no available rooms for the category")
         room_id = random.choice(rooms)

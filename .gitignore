@@ -2,3 +2,4 @@ __pycache__
 .env
 prac.py
 samconfig.toml
+.aws-sam
