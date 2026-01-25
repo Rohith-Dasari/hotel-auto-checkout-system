@@ -15,6 +15,9 @@ class SchedulerService:
         if isinstance(checkout_time, str):
             checkout_time = datetime.fromisoformat(checkout_time)
 
+        if checkout_time.tzinfo is None:
+            checkout_time = checkout_time.replace(tzinfo=timezone.utc)
+
         schedule_time_utc = checkout_time.astimezone(timezone.utc).isoformat()
 
         self.client.create_schedule(

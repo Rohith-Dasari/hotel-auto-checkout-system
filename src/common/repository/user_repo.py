@@ -1,10 +1,17 @@
 from botocore.exceptions import ClientError
 import logging
-from types_boto3_dynamodb.service_resource import Table
-from types_boto3_dynamodb import DynamoDBClient
 from typing import Optional
 from boto3.dynamodb.conditions import Key
 from src.common.models.users import User, UserRole
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from types_boto3_dynamodb.service_resource import Table
+    from types_boto3_dynamodb import DynamoDBClient
+else:
+    Table = object
+    DynamoDBClient = object
 
 logger = logging.getLogger(__name__)
 

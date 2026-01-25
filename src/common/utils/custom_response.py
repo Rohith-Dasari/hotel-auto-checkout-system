@@ -12,7 +12,7 @@ class APIResponse(BaseModel, Generic[T]):
     
 def send_custom_response(status_code:int,message:str,data:Optional[T]=None):
     return {
-        'statusCode': 200,
+        'statusCode': status_code,
         'headers': {
             'Content-Type': 'application/json',
         },

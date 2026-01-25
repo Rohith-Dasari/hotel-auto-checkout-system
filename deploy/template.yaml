@@ -4,6 +4,7 @@ Parameters:
   TableName:
     Type: String
     Default: hotel_checkout_system
+
   JwtSecret:
     Type: String
     NoEcho: true
@@ -14,11 +15,18 @@ Globals:
       - arm64
     Timeout: 20
     Runtime: python3.13
+    CodeUri: ..
+
     Environment:
       Variables:
         TABLE_NAME: !Ref TableName
+        PYTHONPATH: "/var/task"
+        PYTHONUNBUFFERED: "1"
+        JWT_SECRET: !Ref JwtSecret
+        JWT_ALGORITHM: "HS256"
 
 Resources:
+
 
   ApiGateway:
     Type: AWS::Serverless::Api
@@ -33,14 +41,14 @@ Resources:
         Authorizers:
           MyLambdaRequestAuth:
             FunctionArn: !GetAtt AuthFunction.Arn
+            AuthorizerType: REQUEST
             Identity:
               Header: Authorization
 
   AuthFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../src/handlers/auth
-      Handler: jwt_authorizer.lambda_handler
+      Handler: src.handlers.auth.jwt_authorizer.lambda_handler
       Environment:
         Variables:
           JWT_SECRET: !Ref JwtSecret
@@ -54,6 +62,7 @@ Resources:
       FunctionName: !Ref AuthFunction
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
+
 
   SchedulerRole:
     Type: AWS::IAM::Role
@@ -75,11 +84,11 @@ Resources:
                   - lambda:InvokeFunction
                 Resource: !Sub "${AutoCheckoutFunction.Arn}:*"
 
+
   LoginFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../src/handlers/auth
-      Handler: login.login_handler
+      Handler: src.handlers.auth.login.login_handler
       Events:
         ApiEvent:
           Type: Api
@@ -96,8 +105,7 @@ Resources:
   SignupFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../src/handlers/auth
-      Handler: signup.signup_handler
+      Handler: src.handlers.auth.signup.signup_handler
       Events:
         ApiEvent:
           Type: Api
@@ -111,11 +119,12 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref TableName
 
+
+
   GetRoomsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../src/handlers/rooms
-      Handler: get_rooms.get_rooms
+      Handler: src.handlers.rooms.get_rooms.get_rooms
       Events:
         ApiEvent:
           Type: Api
@@ -130,8 +139,7 @@ Resources:
   UpdateRoomFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../src/handlers/rooms
-      Handler: update_room.update_room
+      Handler: src.handlers.rooms.update_room.update_room
       Events:
         ApiEvent:
           Type: Api
@@ -143,11 +151,12 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref TableName
 
+
+
   CreateBookingFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../src/handlers/bookings
-      Handler: create_booking.create_booking
+      Handler: src.handlers.bookings.create_booking.create_booking
       Environment:
         Variables:
           AUTO_CHECKOUT_LAMBDA_ARN: !GetAtt AutoCheckoutFunction.Arn
@@ -171,8 +180,7 @@ Resources:
   ListBookingsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../src/handlers/bookings
-      Handler: get_bookings.get_user_bookings
+      Handler: src.handlers.bookings.get_bookings.get_user_bookings
       Events:
         ApiEvent:
           Type: Api
@@ -184,11 +192,11 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref TableName
 
+
   AutoCheckoutFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../src/handlers/checkout
-      Handler: auto_checkout.auto_checkout
+      Handler: src.handlers.checkout.auto_checkout.auto_checkout
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref TableName
@@ -199,3 +207,9 @@ Resources:
       FunctionName: !Ref AutoCheckoutFunction
       Action: lambda:InvokeFunction
       Principal: scheduler.amazonaws.com
+
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway endpoint
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/v1"

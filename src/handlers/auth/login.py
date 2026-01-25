@@ -11,7 +11,7 @@ TABLE_NAME = os.environ.get('TABLE_NAME')
 dynamodb = resource("dynamodb", region_name="ap-south-1")
 table = dynamodb.Table(TABLE_NAME)
 repo = UserRepository(table=table)
-service = UserService(repo=repo) 
+service = UserService(user_repo=repo) 
 
 def login_handler(event,context):
     try:

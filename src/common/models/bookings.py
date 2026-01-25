@@ -29,18 +29,3 @@ class Booking:
     booked_at: datetime = field(default_factory=datetime.now(timezone.utc))
 
 
-@dataclass
-class BookingRequest:
-    category: str
-    checkin: datetime
-    checkout: datetime
-
-
-@dataclass
-class BookingResponse:
-    booking_id: str
-    room_id: str
-    status: BookingStatus
-    checkin: datetime
-    checkout: datetime
-    invoice_url: Optional[str] = None

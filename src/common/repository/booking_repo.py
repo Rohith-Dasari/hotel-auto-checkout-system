@@ -1,11 +1,21 @@
 from botocore.exceptions import ClientError
 import logging
-from types_boto3_dynamodb.service_resource import Table
-from types_boto3_dynamodb import DynamoDBClient
 from typing import Optional, List
 from boto3.dynamodb.conditions import Key
 from src.common.models.bookings import Booking, BookingStatus
 from src.common.models.rooms import Category, RoomStatus
+from decimal import Decimal
+from datetime import datetime
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from types_boto3_dynamodb.service_resource import Table
+    from types_boto3_dynamodb import DynamoDBClient
+else:
+    Table = object
+    DynamoDBClient = object
+
 
 logger = logging.getLogger(__name__)
 
@@ -16,41 +26,48 @@ class BookingRepository:
         self.client = client if client else table.meta.client
 
 
+    @staticmethod
+    def _iso(dt: datetime | str) -> str:
+        return dt if isinstance(dt, str) else dt.isoformat()
+
     def add_booking(self, booking: Booking):
+        checkin_iso = self._iso(booking.checkin)
+        checkout_iso = self._iso(booking.checkout)
+
         booking_item = {
             "pk": f"BOOKING#{booking.booking_id}",
             "sk": "DETAILS",
             "user_id": booking.user_id,
-            "check_in": booking.checkin,
-            "check_out": booking.checkout,
+            "check_in": checkin_iso,
+            "check_out": checkout_iso,
             "category": booking.category.value,
             "booking_status": booking.status.value,
             "room_id": booking.room_id,
-            "price_per_night": booking.price_per_night,
-            "booked_at": booking.booked_at,
+            "price_per_night": Decimal(str(booking.price_per_night)),
+            "booked_at": self._iso(booking.booked_at),
             "user_email": booking.user_email,
         }
 
         user_booking = {
             "pk": f"USER#{booking.user_id}",
             "sk": f"BOOKING#{booking.booking_id}",
-            "check_in": booking.checkin,
-            "check_out": booking.checkout,
+            "check_in": checkin_iso,
+            "check_out": checkout_iso,
             "category": booking.category.value,
             "booking_status": booking.status.value,
             "room_id": booking.room_id,
-            "price_per_night": booking.price_per_night,
-            "booked_at": booking.booked_at,
+            "price_per_night": Decimal(str(booking.price_per_night)),
+            "booked_at": self._iso(booking.booked_at),
             "user_email": booking.user_email,
 
         }
 
         room_booking = {
             "pk": f"ROOM#{booking.room_id}",
-            "sk": f"CHECKIN#{booking.checkin}",
+            "sk": f"CHECKIN#{checkin_iso}",
             "booking_id": booking.booking_id,
-            "checkout_date": booking.checkout,
-            "checkin_date": booking.checkin,
+            "checkout_date": checkout_iso,
+            "checkin_date": checkin_iso,
         }
 
         try:
@@ -83,16 +100,20 @@ class BookingRepository:
 
         bookings = []
         for item in items:
+            checkin_dt = datetime.fromisoformat(item["check_in"]) if isinstance(item["check_in"], str) else item["check_in"]
+            checkout_dt = datetime.fromisoformat(item["check_out"]) if isinstance(item["check_out"], str) else item["check_out"]
+            booked_at_dt = datetime.fromisoformat(item["booked_at"]) if isinstance(item["booked_at"], str) else item["booked_at"]
+
             booking = Booking(
                 booking_id=item["sk"].removeprefix("BOOKING#"),
                 user_id=user_id,
                 room_id=item["room_id"],
                 category=Category(item["category"]),
                 status=BookingStatus(item["booking_status"]),
-                checkin=item["check_in"],
-                checkout=item["check_out"],
+                checkin=checkin_dt,
+                checkout=checkout_dt,
                 price_per_night=float(item["price_per_night"]),
-                booked_at=item["booked_at"],
+                booked_at=booked_at_dt,
                 user_email=item.get("user_email")
 
             )
@@ -113,16 +134,20 @@ class BookingRepository:
         if not item:
             return None
 
+        checkin_dt = datetime.fromisoformat(item["check_in"]) if isinstance(item["check_in"], str) else item["check_in"]
+        checkout_dt = datetime.fromisoformat(item["check_out"]) if isinstance(item["check_out"], str) else item["check_out"]
+        booked_at_dt = datetime.fromisoformat(item["booked_at"]) if isinstance(item["booked_at"], str) else item["booked_at"]
+
         return Booking(
             booking_id=booking_id,
             user_id=item["user_id"],
             room_id=item["room_id"],
             category=Category(item["category"]),
             status=BookingStatus(item["booking_status"]),
-            checkin=item["check_in"],
-            checkout=item["check_out"],
+            checkin=checkin_dt,
+            checkout=checkout_dt,
             price_per_night=float(item["price_per_night"]),
-            booked_at=item["booked_at"],
+            booked_at=booked_at_dt,
             user_email=item.get("user_email")
 
         )

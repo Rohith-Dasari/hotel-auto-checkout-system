@@ -10,10 +10,10 @@ import os
 
 
 class InvoiceService:
-    def __init__(self, booking_repo):
+    def __init__(self, booking_repo:BookingRepository):
         self.booking_repo = booking_repo
         self.ses = boto3.client(
-            "ses"
+            "ses",region_name="ap-south-1"
         )
 
     def send_email(self, invoice:Invoice):
@@ -66,13 +66,13 @@ class InvoiceService:
         invoice = Invoice(
             booking_id=booking.booking_id,
             user_email=booking.user_email,
-            room_no=booking.room_no,
+            room_no=booking.room_id,
             category=booking.category,
             checkin=booking.checkin,
             checkout=booking.checkout,
             nights=nights,
             price_per_night=booking.price_per_night,
-            total_amount=total_price,
+            total_amount=float(total_price),
         )
         return invoice
 

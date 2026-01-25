@@ -1,11 +1,18 @@
 from botocore.exceptions import ClientError
 import logging
-from types_boto3_dynamodb.service_resource import Table
-from types_boto3_dynamodb import DynamoDBClient
 from typing import Optional, List
 from boto3.dynamodb.conditions import Key
 from src.common.models.rooms import Room, Category, RoomStatus
 from datetime import datetime
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from types_boto3_dynamodb.service_resource import Table
+    from types_boto3_dynamodb import DynamoDBClient
+else:
+    Table = object
+    DynamoDBClient = object
 
 
 logger = logging.getLogger(__name__)
@@ -29,7 +36,7 @@ class RoomRepository:
         if not item:
             return None
         return Room(
-            room_id,category= Category(item["category"]), status=item["room_status"]
+            room_id,category= Category(item["category"]), status=RoomStatus(item["room_status"])
         )
 
     def get_rooms_ids_by_category(self, category: Category) -> List[str]:

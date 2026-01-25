@@ -1,5 +1,6 @@
 from src.common.repository.booking_repo import BookingRepository
-from src.common.models.bookings import BookingRequest, Booking, BookingStatus
+from src.common.models.bookings import Booking, BookingStatus
+from src.common.schemas.bookings import BookingRequest
 from src.common.models.rooms import Category
 from typing import List,Optional
 from src.common.repository.user_repo import UserRepository

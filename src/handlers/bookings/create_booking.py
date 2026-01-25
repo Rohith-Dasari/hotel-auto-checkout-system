@@ -7,7 +7,7 @@ from src.common.repository.user_repo import UserRepository
 from src.common.repository.room_repo import RoomRepository
 from src.common.services.booking_service import BookingService
 from src.common.services.schedule_service import SchedulerService
-from src.common.models.bookings import BookingRequest
+from src.common.schemas.bookings import BookingRequest
 from src.common.utils.custom_response import send_custom_response
 from src.common.utils.custom_exceptions import NotFoundException,NoAvailableRooms
 from pydantic import ValidationError

@@ -13,7 +13,7 @@ dynamodb = resource("dynamodb", region_name="ap-south-1")
 table = dynamodb.Table(TABLE_NAME)
 
 user_repo = UserRepository(table=table)
-service = UserService(repo=user_repo)
+service = UserService(user_repo=user_repo)
 
 
 def signup_handler(event, context):

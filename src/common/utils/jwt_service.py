@@ -1,12 +1,16 @@
+import os
 from datetime import datetime, timedelta, timezone
 from jose import jwt
 
-SECRET_KEY = "your_very_secret_key"
-ALGORITHM = "HS256"
+SECRET_KEY = os.environ.get("JWT_SECRET")
+ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
 
 def create_jwt(user_id: str, email: str, role: str):
+    if not SECRET_KEY:
+        raise RuntimeError("JWT_SECRET environment variable is not set")
+
     payload = {
         "user_id": user_id,
         "email": email,
