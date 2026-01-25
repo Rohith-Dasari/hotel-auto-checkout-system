@@ -1,8 +1,11 @@
 import os
-import jwt  
+import jwt
 
-JWT_SECRET = os.environ["JWT_SECRET"]
+JWT_SECRET = os.environ.get("JWT_SECRET")
 JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
+
+if not JWT_SECRET:
+    raise RuntimeError("JWT_SECRET environment variable is not set")
 
 
 def _generate_policy(principal_id, effect, resource, context=None):
@@ -28,9 +31,18 @@ def _generate_policy(principal_id, effect, resource, context=None):
     return auth_response
 
 
+def _get_stage_arn(method_arn: str) -> str:
+    parts = method_arn.split("/")
+    return "/".join(parts[:2]) + "/*/*"
+
+
 def lambda_handler(event, context):
     try:
-        token = event["authorizationToken"]
+        headers = event.get("headers") or {}
+        token = headers.get("Authorization") or headers.get("authorization")
+
+        if not token:
+            raise Exception("Missing Authorization header")
 
         if token.startswith("Bearer "):
             token = token.replace("Bearer ", "")
@@ -46,10 +58,12 @@ def lambda_handler(event, context):
         if not user_id:
             raise Exception("Missing user_id in token")
 
+        resource = _get_stage_arn(event["methodArn"])
+
         return _generate_policy(
             principal_id=user_id,
             effect="Allow",
-            resource=event["methodArn"],
+            resource=resource,
             context={
                 "user_id": user_id,
                 "email": decoded.get("email", ""),
@@ -57,10 +71,15 @@ def lambda_handler(event, context):
             },
         )
 
+    except jwt.ExpiredSignatureError:
+        print("Authorization failed: Token expired")
+    except jwt.InvalidTokenError as e:
+        print("Authorization failed: Invalid token", str(e))
     except Exception as e:
         print("Authorization failed:", str(e))
-        return _generate_policy(
-            principal_id="unauthorized",
-            effect="Deny",
-            resource=event["methodArn"],
-        )
+
+    return _generate_policy(
+        principal_id="unauthorized",
+        effect="Deny",
+        resource=_get_stage_arn(event["methodArn"]),
+    )

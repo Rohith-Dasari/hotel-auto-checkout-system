@@ -5,6 +5,8 @@ from src.common.schemas.users import SignupRequest
 from src.common.utils.custom_response import send_custom_response
 from boto3 import resource
 from pydantic import ValidationError
+from botocore.exceptions import ClientError
+
 
 TABLE_NAME = os.environ.get("TABLE_NAME")
 dynamodb = resource("dynamodb", region_name="ap-south-1")
@@ -27,6 +29,9 @@ def signup_handler(event, context):
             request_body.password,
             request_body.phone_number,
         )
-        send_custom_response(status_code=201, message="signup successful", data=token)
+        return send_custom_response(status_code=201, message="signup successful", data=token)
+    except ClientError as e:
+        return send_custom_response(status_code=500,message=str(e))
     except Exception as e:
-        print(e)
+            print(e)
+            return send_custom_response(status_code=500, message="Internal server error")
