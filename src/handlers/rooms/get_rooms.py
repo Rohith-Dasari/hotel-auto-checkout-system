@@ -103,6 +103,11 @@ def get_rooms(event, context):
             400,
             str(err)
         )
+    except ValueError as err:
+        return send_custom_response(
+            400,
+            str(err)
+        )
 
     except Exception as err:
         print("Unhandled error:", err)
