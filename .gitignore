@@ -3,3 +3,5 @@ __pycache__
 prac.py
 samconfig.toml
 .aws-sam
+htmlcov
+.coverage
