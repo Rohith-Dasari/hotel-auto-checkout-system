@@ -29,7 +29,7 @@ class BookingService:
             raise NotFoundException(
                 resource="user", identifier=user_id, status_code=404
             )
-        category = Category(req.category)
+        category = Category(req.category.upper())
         price = self.room_repo.get_category_price(category)
         if price is None:
             raise NotFoundException("category", category.value, 404)

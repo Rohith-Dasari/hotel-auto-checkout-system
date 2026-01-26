@@ -76,7 +76,7 @@ class RoomRepository:
     def update_room_status(self, room_id: str, status: RoomStatus):
         try:
             self.table.update_item(
-                {"pk": f"ROOM#{room_id}", "sk": "DETAILS"},
+                Key={"pk": f"ROOM#{room_id}", "sk": "DETAILS"},
                 UpdateExpression="SET #attribute=:value",
                 ExpressionAttributeNames={"#attribute": "room_status"},
                 ExpressionAttributeValues={

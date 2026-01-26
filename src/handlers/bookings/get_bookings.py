@@ -1,10 +1,12 @@
 import os
+import json
 from boto3 import resource
 
 from src.common.repository.booking_repo import BookingRepository
 from src.common.repository.user_repo import UserRepository
 from src.common.repository.room_repo import RoomRepository
 from src.common.services.booking_service import BookingService
+from src.common.models.users import UserRole
 from src.common.utils.custom_response import send_custom_response
 from src.common.utils.custom_exceptions import NotFoundException
 
@@ -27,11 +29,33 @@ booking_service = BookingService(
 def get_user_bookings(event, context):
     try:
         try:
-            user_id = event["requestContext"]["authorizer"]["user_id"]
+            authorizer = event["requestContext"]["authorizer"]
+            user_id = authorizer["user_id"]
+            role_raw = authorizer.get("role")
         except KeyError:
             return send_custom_response(401, "Unauthorized")
 
-        bookings = booking_service.get_user_bookings(user_id)
+        role = None
+        if role_raw:
+            try:
+                role = UserRole(role_raw.upper())
+            except ValueError:
+                role = None
+
+        requested_user_id = user_id
+        if event.get("body"):
+            try:
+                body = json.loads(event["body"])
+                requested_user_id = body.get("user_id", user_id)
+            except json.JSONDecodeError:
+                return send_custom_response(400, "Invalid JSON body")
+
+        if role == UserRole.CUSTOMER and requested_user_id != user_id:
+            return send_custom_response(401, "Unauthorized")
+
+        target_user_id = requested_user_id if role in {UserRole.MANAGER, UserRole.ADMIN} else user_id
+
+        bookings = booking_service.get_user_bookings(target_user_id)
 
         result = []
         for b in bookings:

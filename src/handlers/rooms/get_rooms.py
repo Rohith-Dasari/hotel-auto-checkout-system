@@ -5,8 +5,10 @@ from boto3 import resource
 from src.common.repository.room_repo import RoomRepository
 from src.common.services.room_service import RoomService
 from src.common.models.rooms import Category
+from src.common.models.users import UserRole
 from src.common.utils.custom_exceptions import NoAvailableRooms, InvalidDates
 from src.common.utils.custom_response import send_custom_response
+
 
 TABLE_NAME = os.environ.get("TABLE_NAME")
 
@@ -29,6 +31,15 @@ def get_rooms(event, context):
     try:
         params = event.get("queryStringParameters") or {}
 
+        authorizer = event.get("requestContext", {}).get("authorizer", {})
+        role_raw = authorizer.get("role")
+        role = None
+        if role_raw:
+            try:
+                role = UserRole(role_raw.upper())
+            except ValueError:
+                role = None
+
         category_raw = params.get("category")
         checkin = params.get("checkin")
         checkout = params.get("checkout")
@@ -46,7 +57,7 @@ def get_rooms(event, context):
             )
 
         try:
-            category = Category(category_raw)
+            category = Category(category_raw.upper())
         except ValueError:
             allowed = ", ".join(c.value for c in Category)
             return send_custom_response(
@@ -60,16 +71,20 @@ def get_rooms(event, context):
             checkout=checkout
         )
 
+        response_data = {
+            "category": category.value,
+            "checkin": checkin,
+            "checkout": checkout,
+            "count": len(rooms)
+        }
+
+        if role != UserRole.CUSTOMER:
+            response_data["available_rooms"] = rooms
+
         return send_custom_response(
             200,
             "successfully retrieved",
-            {
-                "category": category.value,
-                "checkin": checkin,
-                "checkout": checkout,
-                "available_rooms": rooms,
-                "count": len(rooms)
-            }
+            response_data
         )
 
     except NoAvailableRooms as err:

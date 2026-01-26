@@ -142,7 +142,7 @@ Resources:
         ApiEvent:
           Type: Api
           Properties:
-            Path: /rooms
+            Path: /rooms/{room_id}
             Method: PUT
             RestApiId: !Ref ApiGateway
       Policies:

@@ -7,6 +7,7 @@ from src.common.models.rooms import RoomStatus
 from src.common.utils.custom_response import send_custom_response
 from src.common.utils.custom_exceptions import NotFoundException
 from botocore.exceptions import ClientError
+from src.common.models.users import UserRole
 
 TABLE_NAME = os.environ.get("TABLE_NAME")
 
@@ -19,6 +20,28 @@ room_service = RoomService(room_repo=room_repo)
 
 def update_room(event, context):
     try:
+        try:
+            role_raw = event["requestContext"]["authorizer"]["role"]
+        except KeyError:
+            return send_custom_response(401, "Unauthorized")
+
+        try:
+            role = UserRole(role_raw.upper())
+        except ValueError:
+            return send_custom_response(403, "Forbidden")
+
+        if role != UserRole.MANAGER:
+            return send_custom_response(403, "Only managers can update room status")
+
+        path_params = event.get("pathParameters") or {}
+        room_id = path_params.get("room_id")
+
+        if not room_id:
+            return send_custom_response(
+                400,
+                "room_id is required in the path"
+            )
+
         if not event.get("body"):
             return send_custom_response(
                 400,
@@ -33,13 +56,12 @@ def update_room(event, context):
                 "Invalid JSON body"
             )
 
-        room_id = body.get("room_id")
         status_raw = body.get("status")
 
-        if not room_id or not status_raw:
+        if not status_raw:
             return send_custom_response(
                 400,
-                "room_id and status are required"
+                "status is required"
             )
 
         try:

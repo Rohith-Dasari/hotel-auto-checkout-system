@@ -6,6 +6,7 @@ from src.common.repository.booking_repo import BookingRepository
 from src.common.repository.user_repo import UserRepository
 from src.common.repository.room_repo import RoomRepository
 from src.common.services.booking_service import BookingService
+from src.common.models.rooms import Category
 from src.common.services.schedule_service import SchedulerService
 from src.common.schemas.bookings import BookingRequest
 from src.common.utils.custom_response import send_custom_response
@@ -54,9 +55,13 @@ def create_booking(event, context):
             "Booking created successfully"
         )
 
+    except ValueError:
+        allowed = ", ".join(c.value for c in Category)
+        return send_custom_response(400, f"Invalid category. Allowed: {allowed}")
+
     except NotFoundException as err:
         return send_custom_response(err.status_code, str(err))
-    
+
     except NoAvailableRooms as err:
         return send_custom_response(404, str(err))
 

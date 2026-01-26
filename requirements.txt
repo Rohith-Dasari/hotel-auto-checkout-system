@@ -3,5 +3,4 @@ botocore
 pydantic
 PyJWT
 bcrypt
-python-jose
 email-validator

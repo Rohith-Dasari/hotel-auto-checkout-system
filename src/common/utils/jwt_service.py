@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timedelta, timezone
-from jose import jwt
+import jwt
 
 SECRET_KEY = os.environ.get("JWT_SECRET")
 ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
@@ -20,7 +20,3 @@ def create_jwt(user_id: str, email: str, role: str):
     }
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
     return token
-
-
-def decode_access_token(token: str):
-    return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])

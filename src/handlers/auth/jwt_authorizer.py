@@ -37,9 +37,21 @@ def _get_stage_arn(method_arn: str) -> str:
 
 
 def lambda_handler(event, context):
+    print("Full Event:", event)
+
+    if event.get("httpMethod") == "OPTIONS":
+        return _generate_policy(
+            principal_id="cors-preflight",
+            effect="Allow",
+            resource=event.get("methodArn")
+        )
+
     try:
-        headers = event.get("headers") or {}
-        token = headers.get("Authorization") or headers.get("authorization")
+        token = event.get("authorizationToken")
+
+        if not token:
+            headers = event.get("headers") or {}
+            token = headers.get("Authorization") or headers.get("authorization")
 
         if not token:
             raise Exception("Missing Authorization header")

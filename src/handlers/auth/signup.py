@@ -36,7 +36,6 @@ def signup_handler(event, context):
     except ValueError as e:
         return send_custom_response(status_code=400, message=str(e))
     except UserAlreadyExists as e:
-        return send_custom_response(status_code=403, message="Internal server error")
-        
+        return send_custom_response(status_code=403, message=str(e))
     except Exception as e:
         return send_custom_response(status_code=500, message=f"Internal server error: {str(e)}")
