@@ -2,6 +2,7 @@ import os
 from src.common.repository.user_repo import UserRepository
 from src.common.services.user_service import UserService
 from src.common.schemas.users import  LoginRequest
+from src.common.utils.custom_exceptions import IncorrectCredentials,NotFoundException
 from src.common.utils.custom_response import send_custom_response 
 from pydantic import ValidationError
 from botocore.exceptions import ClientError
@@ -23,6 +24,10 @@ def login_handler(event,context):
         return send_custom_response(status_code=200,message="login successful",data=token)
     except ClientError as e:
         return send_custom_response(status_code=500,message=str(e))
+    except IncorrectCredentials as e:
+        return send_custom_response(status_code=401,message=str(e))
+    except NotFoundException as e:
+        return send_custom_response(status_code=404, message=str(e))
     except Exception as e:
         print(e)
         return send_custom_response(status_code=500, message="Internal server error")

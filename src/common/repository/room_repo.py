@@ -4,6 +4,7 @@ from typing import Optional, List
 from boto3.dynamodb.conditions import Key
 from src.common.models.rooms import Room, Category, RoomStatus
 from datetime import datetime
+from src.common.utils.custom_exceptions import NotFoundException
 
 from typing import TYPE_CHECKING
 
@@ -84,6 +85,8 @@ class RoomRepository:
                 ConditionExpression="attribute_exists(pk)",
             )
         except ClientError as err:
+            if err.response.get("Error", {}).get("Code") == "ConditionalCheckFailedException":
+                raise NotFoundException("room", room_id, 404)
             logger.error(f"Error updating room {room_id} status: {err}")
             raise
 

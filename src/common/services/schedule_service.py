@@ -9,7 +9,7 @@ class SchedulerService:
         self.lambda_arn = lambda_arn
         self.role_arn = role_arn
 
-    def schedule_checkout(self, booking_id: str, user_id: str, room_id: str, checkout_time):
+    def schedule_checkout(self, booking_id: str, user_id: str, room_id: str, checkout_time:datetime):
         schedule_name = f"checkout-{booking_id}"
 
         if isinstance(checkout_time, str):

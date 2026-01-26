@@ -2,6 +2,7 @@ import os
 from src.common.repository.user_repo import UserRepository
 from src.common.services.user_service import UserService
 from src.common.schemas.users import SignupRequest
+from src.common.utils.custom_exceptions import UserAlreadyExists
 from src.common.utils.custom_response import send_custom_response
 from boto3 import resource
 from pydantic import ValidationError
@@ -32,6 +33,10 @@ def signup_handler(event, context):
         return send_custom_response(status_code=201, message="signup successful", data=token)
     except ClientError as e:
         return send_custom_response(status_code=500,message=str(e))
+    except ValueError as e:
+        return send_custom_response(status_code=400, message=str(e))
+    except UserAlreadyExists as e:
+        return send_custom_response(status_code=403, message="Internal server error")
+        
     except Exception as e:
-            print(e)
-            return send_custom_response(status_code=500, message="Internal server error")
+        return send_custom_response(status_code=500, message=f"Internal server error: {str(e)}")

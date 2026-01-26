@@ -1,6 +1,7 @@
 from src.common.models.invoice import Invoice
 from src.common.models.bookings import Booking
 from src.common.repository.booking_repo import BookingRepository
+from src.common.utils.custom_exceptions import NotFoundException
 
 
 import boto3
@@ -61,6 +62,8 @@ class InvoiceService:
 
     def generate_invoice(self, booking_id: str) -> Invoice:
         booking = self.booking_repo.get_booking_by_id(booking_id)
+        if not booking:
+            raise NotFoundException("booking",booking_id,404)
         nights = (booking.checkout - booking.checkin).days
         total_price = nights * booking.price_per_night
         invoice = Invoice(

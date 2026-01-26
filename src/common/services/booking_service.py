@@ -48,7 +48,13 @@ class BookingService:
             user_email=user.email,
         )
         self.booking_repo.add_booking(booking)
-        self.schedule_service.schedule_checkout(booking_id=booking_id,user_id=user_id, room_id=room_id,checkout_time=booking.checkout)
+        if self.schedule_service:
+            self.schedule_service.schedule_checkout(
+                booking_id=booking_id,
+                user_id=user_id,
+                room_id=room_id,
+                checkout_time=booking.checkout,
+            )
 
     def update_booking(self, booking_id: str, user_id:str,room_id:str):
         self.booking_repo.update_booking_status(
@@ -72,4 +78,4 @@ class BookingService:
         if not user:
             raise NotFoundException("user", user_id, 404)
         return self.booking_repo.get_user_bookings(user_id)
-    
+

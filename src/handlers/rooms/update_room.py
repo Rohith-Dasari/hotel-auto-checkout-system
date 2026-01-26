@@ -5,6 +5,8 @@ from src.common.repository.room_repo import RoomRepository
 from src.common.services.room_service import RoomService
 from src.common.models.rooms import RoomStatus
 from src.common.utils.custom_response import send_custom_response
+from src.common.utils.custom_exceptions import NotFoundException
+from botocore.exceptions import ClientError
 
 TABLE_NAME = os.environ.get("TABLE_NAME")
 
@@ -62,6 +64,11 @@ def update_room(event, context):
             }
         )
 
+    except NotFoundException as err:
+        return send_custom_response(404, str(err))
+    except ClientError as err:
+        print("AWS client error:", err)
+        return send_custom_response(500, "Internal server error")
     except Exception as err:
         print("Unhandled error:", err)
         return send_custom_response(
