@@ -50,7 +50,7 @@ class RoomRepository:
                 )
             )
         except ClientError as err:
-            logger.error(f"Error retrieving {category} rooms: {err}")
+            logger.error(f"Error retrieving {category.value} rooms: {err}")
             raise
         items = response.get("Items", [])
         if not items:
@@ -67,7 +67,7 @@ class RoomRepository:
                 Key={"pk": f"CATEGORY#{category.value}", "sk": "DETAILS"}
             )
         except ClientError as err:
-            logger.error(f"Error retrieving category {category} details: {err}")
+            logger.error(f"Error retrieving category {category.value} details: {err}")
             raise
         item = response.get("Item")
         if not item:

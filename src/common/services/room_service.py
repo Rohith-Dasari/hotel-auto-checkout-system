@@ -38,6 +38,6 @@ class RoomService:
         rooms = self.room_repo.get_available_rooms(category, checkin_dt, checkout_dt)
 
         if not rooms:
-            raise NoAvailableRooms(f"no {category} for {checkin_dt} to {checkout_dt}")
+            raise NoAvailableRooms(f"no {category.value} for {checkin_dt} to {checkout_dt}")
         return rooms 
              
