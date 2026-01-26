@@ -26,8 +26,6 @@ Globals:
         JWT_ALGORITHM: "HS256"
 
 Resources:
-
-
   ApiGateway:
     Type: AWS::Serverless::Api
     Properties:
