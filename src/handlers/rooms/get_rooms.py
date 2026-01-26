@@ -19,12 +19,14 @@ room_repo = RoomRepository(table)
 room_service = RoomService(room_repo=room_repo)
 
 
-def _validate_iso_date(date_str: str) -> bool:
-    try:
-        datetime.fromisoformat(date_str)
-        return True
-    except (ValueError, TypeError):
-        return False
+def _parse_iso_datetime(value: str) -> datetime:
+    if not isinstance(value, str):
+        raise ValueError("Datetime must be a string")
+
+    dt = datetime.fromisoformat(value)
+    if dt.tzinfo is None:
+        raise ValueError("Datetime must include timezone offset")
+    return dt
 
 
 def get_rooms(event, context):
@@ -50,11 +52,11 @@ def get_rooms(event, context):
                 "category, checkin and checkout are required"
             )
 
-        if not _validate_iso_date(checkin) or not _validate_iso_date(checkout):
-            return send_custom_response(
-                400,
-                "checkin and checkout must be in ISO format: YYYY-MM-DD"
-            )
+        try:
+            checkin_dt = _parse_iso_datetime(checkin)
+            checkout_dt = _parse_iso_datetime(checkout)
+        except ValueError as e:
+            return send_custom_response(400, str(e))
 
         try:
             category = Category(category_raw.upper())
@@ -65,16 +67,19 @@ def get_rooms(event, context):
                 f"Invalid category. Allowed: {allowed}"
             )
 
+        if checkout_dt <= checkin_dt:
+            return send_custom_response(400, "checkout must be after checkin")
+
         rooms = room_service.get_available_rooms(
             category=category,
-            checkin=checkin,
-            checkout=checkout
+            checkin=checkin_dt,
+            checkout=checkout_dt
         )
 
         response_data = {
             "category": category.value,
-            "checkin": checkin,
-            "checkout": checkout,
+            "checkin": checkin_dt.isoformat(),
+            "checkout": checkout_dt.isoformat(),
             "count": len(rooms)
         }
 

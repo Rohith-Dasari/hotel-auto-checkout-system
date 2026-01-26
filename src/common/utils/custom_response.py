@@ -16,5 +16,5 @@ def send_custom_response(status_code:int,message:str,data:Optional[T]=None):
         'headers': {
             'Content-Type': 'application/json',
         },
-        'body': APIResponse(status_code=status_code, message=message, data=data).model_dump_json()
+        'body': APIResponse(status_code=status_code, message=message, data=data).model_dump_json(exclude_none=True)
     }

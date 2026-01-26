@@ -3,8 +3,9 @@ import logging
 from typing import Optional, List
 from boto3.dynamodb.conditions import Key
 from src.common.models.rooms import Room, Category, RoomStatus
-from datetime import datetime
+from datetime import datetime, timezone
 from src.common.utils.custom_exceptions import NotFoundException
+
 
 from typing import TYPE_CHECKING
 
@@ -89,24 +90,38 @@ class RoomRepository:
                 raise NotFoundException("room", room_id, 404)
             logger.error(f"Error updating room {room_id} status: {err}")
             raise
+    def _to_utc(self, dt: datetime) -> datetime:
+        if dt.tzinfo is None:
+            raise ValueError("Datetime must be timezone-aware")
+        return dt.astimezone(timezone.utc)
+
+    def _to_iso(self, dt: datetime) -> str:
+        return self._to_utc(dt).isoformat()
+
+    def _from_iso(self, value: str) -> datetime:
+        dt = datetime.fromisoformat(value)
+        if dt.tzinfo is None:
+            raise ValueError("Stored datetime must be timezone-aware")
+        return dt.astimezone(timezone.utc)
+
 
     def get_available_rooms(
         self,
         category: Category,
-        checkin_date: str,
-        checkout_date: str
-    ) -> List[str]:
+        checkin: datetime,
+        checkout: datetime
+    ) -> list[str]:
+
+        requested_checkin = self._to_utc(checkin)
+        requested_checkout = self._to_utc(checkout)
 
         room_ids = self.get_rooms_ids_by_category(category)
         if not room_ids:
             return []
 
-        requested_checkin = datetime.fromisoformat(checkin_date)
-        requested_checkout = datetime.fromisoformat(checkout_date)
-
         available_rooms = []
 
-        sk_upper_bound = f"CHECKIN#{checkout_date}"
+        sk_upper_bound = f"CHECKIN#{self._to_iso(requested_checkout)}"
 
         for room_id in room_ids:
             try:
@@ -114,10 +129,8 @@ class RoomRepository:
                     KeyConditionExpression=
                         Key("pk").eq(f"ROOM#{room_id}") &
                         Key("sk").lte(sk_upper_bound),
-                    ScanIndexForward=False,
-                    Limit=1
+                    ScanIndexForward=True  
                 )
-
             except ClientError as err:
                 logger.error(f"Error querying bookings for room {room_id}: {err}")
                 continue
@@ -126,11 +139,16 @@ class RoomRepository:
             is_available = True
 
             for booking in bookings:
-                existing_checkout = datetime.fromisoformat(
+                existing_checkin = self._from_iso(
+                    booking["checkin_date"]
+                )
+                existing_checkout = self._from_iso(
                     booking["checkout_date"]
                 )
-
-                if requested_checkin < existing_checkout:
+                if (
+                    requested_checkin < existing_checkout and
+                    existing_checkin < requested_checkout
+                ):
                     is_available = False
                     break
 

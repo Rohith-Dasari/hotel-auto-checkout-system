@@ -1,5 +1,4 @@
 import os
-import json
 from boto3 import resource
 
 from src.common.repository.booking_repo import BookingRepository
@@ -35,25 +34,22 @@ def get_user_bookings(event, context):
         except KeyError:
             return send_custom_response(401, "Unauthorized")
 
-        role = None
-        if role_raw:
-            try:
-                role = UserRole(role_raw.upper())
-            except ValueError:
-                role = None
+        try:
+            role = UserRole(role_raw.upper()) if role_raw else None
+        except ValueError:
+            role = None
 
-        requested_user_id = user_id
-        if event.get("body"):
-            try:
-                body = json.loads(event["body"])
-                requested_user_id = body.get("user_id", user_id)
-            except json.JSONDecodeError:
-                return send_custom_response(400, "Invalid JSON body")
+        path_params = event.get("pathParameters") or {}
+        requested_user_id = path_params.get("user_id") or user_id
 
         if role == UserRole.CUSTOMER and requested_user_id != user_id:
-            return send_custom_response(401, "Unauthorized")
+            return send_custom_response(403, "Forbidden")
 
-        target_user_id = requested_user_id if role in {UserRole.MANAGER, UserRole.ADMIN} else user_id
+        target_user_id = (
+            requested_user_id
+            if role in {UserRole.MANAGER, UserRole.ADMIN}
+            else user_id
+        )
 
         bookings = booking_service.get_user_bookings(target_user_id)
 
@@ -64,10 +60,10 @@ def get_user_bookings(event, context):
                 "room_id": b.room_id,
                 "category": b.category.value,
                 "status": b.status.value,
-                "checkin": b.checkin,
-                "checkout": b.checkout,
-                "price_per_night": b.price_per_night,
-                "booked_at": b.booked_at
+                "checkin": b.checkin.isoformat(),
+                "checkout": b.checkout.isoformat(),
+                "price_per_night": str(b.price_per_night),
+                "booked_at": b.booked_at.isoformat()
             })
 
         return send_custom_response(
@@ -82,6 +78,5 @@ def get_user_bookings(event, context):
     except NotFoundException as err:
         return send_custom_response(err.status_code, str(err))
 
-    except Exception as err:
-        print("Unhandled error:", err)
+    except Exception:
         return send_custom_response(500, "Internal server error")

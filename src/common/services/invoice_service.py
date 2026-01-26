@@ -61,13 +61,15 @@ class InvoiceService:
         booking = self.booking_repo.get_booking_by_id(booking_id)
         if not booking:
             raise NotFoundException("booking",booking_id,404)
-        nights = (booking.checkout - booking.checkin).days
+        delta = (booking.checkout - booking.checkin).days or 1
+        nights=max(1,delta)
+        
         total_price = nights * booking.price_per_night
         invoice = Invoice(
             booking_id=booking.booking_id,
             user_email=booking.user_email,
             room_no=booking.room_id,
-            category=booking.category,
+            category=booking.category.value,
             checkin=booking.checkin,
             checkout=booking.checkout,
             nights=nights,

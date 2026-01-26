@@ -26,6 +26,6 @@ class Booking:
 
     invoice_url: Optional[str] = None
 
-    booked_at: datetime = field(default_factory=datetime.now(timezone.utc))
+    booked_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 

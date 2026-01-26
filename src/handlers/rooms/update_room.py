@@ -65,7 +65,7 @@ def update_room(event, context):
             )
 
         try:
-            status = RoomStatus(status_raw)
+            status = RoomStatus(status_raw.upper())
         except ValueError:
             return send_custom_response(
                 400,

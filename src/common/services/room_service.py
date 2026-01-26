@@ -1,8 +1,8 @@
 from src.common.repository.room_repo import RoomRepository
 from src.common.models.rooms import RoomStatus, Category
 from typing import List, Optional
-from src.common.utils.custom_exceptions import NoAvailableRooms,InvalidDates
-from datetime import datetime
+from src.common.utils.custom_exceptions import NoAvailableRooms, InvalidDates
+from datetime import datetime, timezone
 
 
 class RoomService:
@@ -14,15 +14,30 @@ class RoomService:
     ):
         self.room_repo.update_room_status(room_id, status)
         
-    def get_available_rooms(self,category:Category,checkin:str,checkout:str):
+    def _ensure_datetime(self, value):
+        if isinstance(value, datetime):
+            dt = value
+        else:
+            dt = datetime.fromisoformat(value)
 
-        if datetime.fromisoformat(checkin) >= datetime.fromisoformat(checkout):
+        if dt.tzinfo is None:
+            raise InvalidDates("checkin/checkout must include timezone info")
+
+        return dt.astimezone(timezone.utc)
+
+    def get_available_rooms(self, category: Category, checkin, checkout):
+
+        checkin_dt = self._ensure_datetime(checkin)
+        checkout_dt = self._ensure_datetime(checkout)
+
+        if checkout_dt <= checkin_dt:
             raise InvalidDates(
                 "checkout must be after checkin"
             )
-        rooms= self.room_repo.get_available_rooms(category,checkin,checkout)
-        
+
+        rooms = self.room_repo.get_available_rooms(category, checkin_dt, checkout_dt)
+
         if not rooms:
-            raise NoAvailableRooms(f"no {category} for {checkin} to {checkout}")
+            raise NoAvailableRooms(f"no {category} for {checkin_dt} to {checkout_dt}")
         return rooms 
              

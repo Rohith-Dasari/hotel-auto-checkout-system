@@ -5,8 +5,7 @@ from boto3.dynamodb.conditions import Key
 from src.common.models.bookings import Booking, BookingStatus
 from src.common.models.rooms import Category, RoomStatus
 from decimal import Decimal
-from datetime import datetime
-
+from datetime import datetime,timezone
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -26,9 +25,18 @@ class BookingRepository:
         self.client = client if client else table.meta.client
 
 
+
     @staticmethod
     def _iso(dt: datetime | str) -> str:
-        return dt if isinstance(dt, str) else dt.isoformat()
+        if isinstance(dt, str):
+            parsed = datetime.fromisoformat(dt)
+        else:
+            parsed = dt
+
+        if parsed.tzinfo is None:
+            raise ValueError("Datetime must be timezone-aware")
+
+        return parsed.astimezone(timezone.utc).isoformat()
 
     def add_booking(self, booking: Booking):
         checkin_iso = self._iso(booking.checkin)
@@ -115,7 +123,6 @@ class BookingRepository:
                 price_per_night=float(item["price_per_night"]),
                 booked_at=booked_at_dt,
                 user_email=item.get("user_email")
-
             )
             bookings.append(booking)
 
