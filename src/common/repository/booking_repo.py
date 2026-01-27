@@ -80,6 +80,7 @@ class BookingRepository:
             "room_id": booking.room_id,
             "checkout": checkout_iso,
             "booking_id": booking.booking_id,
+            "ttl_attribute": int(booking.checkout.timestamp()),
         }
 
         try:
