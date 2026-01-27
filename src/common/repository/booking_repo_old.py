@@ -74,13 +74,6 @@ class BookingRepository:
             "checkout_date": checkout_iso,
             "checkin_date": checkin_iso,
         }
-        availability_item = {
-            "pk": f"CATEGORY#{booking.category.value}",
-            "sk": f"CHECKIN#{checkin_iso}#ROOM#{booking.room_id}",
-            "room_id": booking.room_id,
-            "checkout": checkout_iso,
-            "booking_id": booking.booking_id,
-        }
 
         try:
             self.client.transact_write_items(
@@ -92,28 +85,10 @@ class BookingRepository:
                             "ConditionExpression": "attribute_not_exists(pk)",
                         }
                     },
-                    {
-                        "Put": {
-                            "TableName": self.table.name,
-                            "Item": user_booking,
-                        }
-                    },
-                    {
-                        "Put": {
-                            "TableName": self.table.name,
-                            "Item": room_booking,
-                        }
-                    },
-                    {
-                        "Put": {
-                            "TableName": self.table.name,
-                            "Item": availability_item,
-                            "ConditionExpression": "attribute_not_exists(sk)",
-                        }
-                    },
+                    {"Put": {"TableName": self.table.name, "Item": user_booking}},
+                    {"Put": {"TableName": self.table.name, "Item": room_booking}},
                 ]
             )
-
         except ClientError as err:
             logger.error(f"Error creating booking {booking.booking_id}: {err}")
             raise

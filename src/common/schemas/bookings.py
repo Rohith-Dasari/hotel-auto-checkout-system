@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel, model_validator
 from typing import Optional
 
@@ -24,6 +24,9 @@ class BookingRequest(BaseModel):
 
         if checkout_utc <= checkin_utc:
             raise ValueError("checkout must be after checkin")
+        max_stay = timedelta(days=30)
+        if checkout_utc - checkin_utc > max_stay:
+            raise ValueError(f"Maximum stay is {30} days")
 
         self.checkin = checkin_utc
         self.checkout = checkout_utc

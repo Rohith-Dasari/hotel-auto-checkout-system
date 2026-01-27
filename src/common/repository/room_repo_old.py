@@ -3,7 +3,7 @@ import logging
 from typing import Optional, List
 from boto3.dynamodb.conditions import Key
 from src.common.models.rooms import Room, Category, RoomStatus
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from src.common.utils.custom_exceptions import NotFoundException
 
 
@@ -117,68 +117,39 @@ class RoomRepository:
         requested_checkin = self._to_utc(checkin)
         requested_checkout = self._to_utc(checkout)
 
-        MAX_STAY = timedelta(days=30)
-
-        lower_iso = self._to_iso(requested_checkin - MAX_STAY)
-        upper_iso = self._to_iso(requested_checkout)
-
-        rooms = self.get_rooms_ids_by_category(category)
-        all_room_ids: set[str] = set(rooms)
-
-        if not all_room_ids:
+        room_ids = self.get_rooms_ids_by_category(category)
+        if not room_ids:
             return []
 
-        blocked_rooms: set[str] = set()
-        try:
-            resp = self.table.query(
-                KeyConditionExpression=(
-                    Key("pk").eq(f"CATEGORY#{category.value}")
-                    & Key("sk").between(
-                        f"CHECKIN#{lower_iso}",
-                        f"CHECKIN#{upper_iso}",
-                    )
-                )
-            )
+        available_rooms = []
 
-            for item in resp.get("Items", []):
-                existing_checkout = self._from_iso(item["checkout"])
-                existing_checkin = self._from_iso(
-                    item["sk"].split("CHECKIN#", 1)[1].split("#ROOM#", 1)[0]
-                )
+        sk_upper_bound = f"CHECKIN#{self._to_iso(requested_checkout)}"
 
+        for room_id in room_ids:
+            try:
+                response = self.table.query(
+                    KeyConditionExpression=Key("pk").eq(f"ROOM#{room_id}")
+                    & Key("sk").lte(sk_upper_bound),
+                    ScanIndexForward=True,
+                )
+            except ClientError as err:
+                logger.error(f"Error querying bookings for room {room_id}: {err}")
+                continue
+
+            bookings = response.get("Items", [])
+            is_available = True
+
+            for booking in bookings:
+                existing_checkin = self._from_iso(booking["checkin_date"])
+                existing_checkout = self._from_iso(booking["checkout_date"])
                 if (
                     requested_checkin < existing_checkout
                     and existing_checkin < requested_checkout
                 ):
-                    blocked_rooms.add(item["room_id"])
+                    is_available = False
+                    break
 
-            while "LastEvaluatedKey" in resp:
-                resp = self.table.query(
-                    KeyConditionExpression=(
-                        Key("pk").eq(f"CATEGORY#{category.value}")
-                        & Key("sk").between(
-                            f"CHECKIN#{lower_iso}",
-                            f"CHECKIN#{upper_iso}",
-                        )
-                    ),
-                    ExclusiveStartKey=resp["LastEvaluatedKey"],
-                )
-                for item in resp.get("Items", []):
-                    existing_checkout = self._from_iso(item["checkout"])
-                    existing_checkin = self._from_iso(
-                        item["sk"].split("CHECKIN#", 1)[1].split("#ROOM#", 1)[0]
-                    )
+            if is_available:
+                available_rooms.append(room_id)
 
-                    if (
-                        requested_checkin < existing_checkout
-                        and existing_checkin < requested_checkout
-                    ):
-                        blocked_rooms.add(item["room_id"])
-
-        except ClientError as err:
-            logger.error(
-                f"Error retrieving bookings for {category.value} between {lower_iso} and {upper_iso}: {err}"
-            )
-            raise
-
-        return list(all_room_ids - blocked_rooms)
+        return available_rooms
