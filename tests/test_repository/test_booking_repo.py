@@ -51,6 +51,7 @@ class TestBookingRepository(unittest.TestCase):
 
         self.assertTrue("T" in iso)
 
+
     def test_add_booking_success(self):
         self.client.transact_write_items.return_value = {}
 
@@ -60,11 +61,12 @@ class TestBookingRepository(unittest.TestCase):
         _, kwargs = self.client.transact_write_items.call_args
 
         items = kwargs["TransactItems"]
-        self.assertEqual(len(items), 3)
+        self.assertEqual(len(items), 4)
 
         booking_put = items[0]["Put"]["Item"]
         user_put = items[1]["Put"]["Item"]
         room_put = items[2]["Put"]["Item"]
+        avail_put = items[3]["Put"]["Item"]
 
         self.assertEqual(booking_put["pk"], "BOOKING#b1")
         self.assertEqual(booking_put["sk"], "DETAILS")
@@ -81,6 +83,11 @@ class TestBookingRepository(unittest.TestCase):
 
         self.assertEqual(room_put["pk"], "ROOM#r1")
         self.assertTrue(room_put["sk"].startswith("CHECKIN#"))
+
+        self.assertEqual(avail_put["pk"], f"CATEGORY#{self.booking.category.value}")
+        self.assertTrue(avail_put["sk"].startswith(f"CHECKIN#"))
+        self.assertEqual(avail_put["room_id"], self.booking.room_id)
+        self.assertEqual(avail_put["booking_id"], self.booking.booking_id)
 
     def test_add_booking_client_error(self):
         self.client.transact_write_items.side_effect = ClientError(

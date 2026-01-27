@@ -10,6 +10,31 @@ from src.common.utils.custom_exceptions import NotFoundException
 
 class TestRoomRepository(unittest.TestCase):
 
+    def test_add_room_success(self):
+        room = Room(room_id="r1", category=Category.DELUXE)
+        self.client.transact_write_items.return_value = {}
+        self.repo.add_room(room)
+        self.client.transact_write_items.assert_called_once()
+        args = self.client.transact_write_items.call_args[1]
+        self.assertIn("TransactItems", args)
+        self.assertEqual(args["TransactItems"][0]["Put"]["Item"]["pk"], "ROOM#r1")
+
+    def test_add_room_duplicate(self):
+        from botocore.exceptions import ClientError
+        room = Room(room_id="r1", category=Category.DELUXE)
+        error = ClientError({"Error": {"Code": "ConditionalCheckFailedException"}}, "TransactWriteItems")
+        self.client.transact_write_items.side_effect = error
+        with self.assertRaises(ClientError):
+            self.repo.add_room(room)
+
+    def test_add_room_other_client_error(self):
+        from botocore.exceptions import ClientError
+        room = Room(room_id="r1", category=Category.DELUXE)
+        error = ClientError({"Error": {"Code": "InternalError"}}, "TransactWriteItems")
+        self.client.transact_write_items.side_effect = error
+        with self.assertRaises(ClientError):
+            self.repo.add_room(room)
+
     def setUp(self):
         self.table = MagicMock()
         self.client = MagicMock()
@@ -160,34 +185,76 @@ class TestRoomRepository(unittest.TestCase):
 
         self.assertEqual(parsed, dt)
 
-    def test_get_available_rooms_success(self):
+
+    def test_get_available_rooms_blocks_overlapping(self):
         now = datetime.now(timezone.utc)
         checkin = now + timedelta(days=1)
         checkout = now + timedelta(days=2)
+        self.repo.get_rooms_ids_by_category = MagicMock(return_value=["r1", "r2"])
 
-        self.repo.get_rooms_ids_by_category = MagicMock(
-            return_value=["r1", "r2"]
-        )
+        self.table.query.return_value = {
+            "Items": [
+                {
+                    "room_id": "r1",
+                    "checkout": self.repo._to_iso(checkin + timedelta(hours=1)),
+                    "sk": f"CHECKIN#{self.repo._to_iso(checkin)}#ROOM#r1"
+                }
+            ]
+        }
+        available = self.repo.get_available_rooms(Category.DELUXE, checkin, checkout)
+        self.assertEqual(set(available), {"r2"})
+
+    def test_get_available_rooms_pagination(self):
+        now = datetime.now(timezone.utc)
+        checkin = now + timedelta(days=1)
+        checkout = now + timedelta(days=2)
+        self.repo.get_rooms_ids_by_category = MagicMock(return_value=["r1", "r2", "r3"])
 
         self.table.query.side_effect = [
-            {"Items": []},
             {
                 "Items": [
                     {
-                        "checkin_date": self.repo._to_iso(checkin),
-                        "checkout_date": self.repo._to_iso(checkout),
+                        "room_id": "r1",
+                        "checkout": self.repo._to_iso(checkin + timedelta(hours=1)),
+                        "sk": f"CHECKIN#{self.repo._to_iso(checkin)}#ROOM#r1"
+                    }
+                ],
+                "LastEvaluatedKey": True
+            },
+            {
+                "Items": [
+                    {
+                        "room_id": "r2",
+                        "checkout": self.repo._to_iso(checkin + timedelta(hours=2)),
+                        "sk": f"CHECKIN#{self.repo._to_iso(checkin)}#ROOM#r2"
                     }
                 ]
             }
         ]
+        available = self.repo.get_available_rooms(Category.DELUXE, checkin, checkout)
+        self.assertEqual(set(available), {"r3"})
 
+    def test_get_available_rooms_no_rooms_in_category(self):
+        self.repo.get_rooms_ids_by_category = MagicMock(return_value=[])
+        now = datetime.now(timezone.utc)
         available = self.repo.get_available_rooms(
             Category.DELUXE,
-            checkin,
-            checkout
+            now + timedelta(days=1),
+            now + timedelta(days=2)
         )
+        self.assertEqual(available, [])
 
-        self.assertEqual(available, ["r1"])
+    def test_get_available_rooms_query_error(self):
+        now = datetime.now(timezone.utc)
+        checkin = now + timedelta(days=1)
+        checkout = now + timedelta(days=2)
+        self.repo.get_rooms_ids_by_category = MagicMock(return_value=["r1"])
+        self.table.query.side_effect = ClientError(
+            error_response={"Error": {"Message": "Query failed"}},
+            operation_name="Query"
+        )
+        with self.assertRaises(ClientError):
+            self.repo.get_available_rooms(Category.DELUXE, checkin, checkout)
 
     def test_get_available_rooms_no_rooms_in_category(self):
         self.repo.get_rooms_ids_by_category = MagicMock(
@@ -204,27 +271,19 @@ class TestRoomRepository(unittest.TestCase):
 
         self.assertEqual(available, [])
 
-    def test_get_available_rooms_query_error_skips_room(self):
+    def test_get_available_rooms_query_error_raises(self):
         now = datetime.now(timezone.utc)
         checkin = now + timedelta(days=1)
         checkout = now + timedelta(days=2)
 
-        self.repo.get_rooms_ids_by_category = MagicMock(
-            return_value=["r1"]
-        )
-
+        self.repo.get_rooms_ids_by_category = MagicMock(return_value=["r1"])
         self.table.query.side_effect = ClientError(
             error_response={"Error": {"Message": "Query failed"}},
             operation_name="Query"
         )
 
-        available = self.repo.get_available_rooms(
-            Category.DELUXE,
-            checkin,
-            checkout
-        )
-
-        self.assertEqual(available, [])
+        with self.assertRaises(ClientError):
+            self.repo.get_available_rooms(Category.DELUXE, checkin, checkout)
 
 
 if __name__ == "__main__":

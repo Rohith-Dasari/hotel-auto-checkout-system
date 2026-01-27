@@ -9,6 +9,8 @@ from src.common.utils.custom_exceptions import NoAvailableRooms, InvalidDates
 
 class TestRoomService(unittest.TestCase):
 
+    
+
     def setUp(self):
         self.repo = MagicMock()
         self.service = RoomService(self.repo)
@@ -80,3 +82,15 @@ class TestRoomService(unittest.TestCase):
                 checkin,
                 checkout
             )
+    def test_add_room_calls_repo(self):
+        from src.common.models.rooms import Room
+        room_id = "room-123"
+        category = Category.DELUXE
+
+        self.service.add_room(room_id, category)
+
+        self.repo.add_room.assert_called_once()
+        called_room = self.repo.add_room.call_args[1]["room"]
+        self.assertIsInstance(called_room, Room)
+        self.assertEqual(called_room.room_id, room_id)
+        self.assertEqual(called_room.category, category)
