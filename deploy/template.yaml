@@ -128,7 +128,20 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref TableName
 
-
+  AddRoomFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src.handlers.rooms.add_room.add_room
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /rooms
+            Method: POST
+            RestApiId: !Ref ApiGateway
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableName
 
   GetRoomsFunction:
     Type: AWS::Serverless::Function
