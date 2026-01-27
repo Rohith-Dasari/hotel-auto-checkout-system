@@ -10,12 +10,12 @@ from src.common.models.rooms import Category
 from src.common.services.schedule_service import SchedulerService
 from src.common.schemas.bookings import BookingRequest
 from src.common.utils.custom_response import send_custom_response
-from src.common.utils.custom_exceptions import NotFoundException,NoAvailableRooms
+from src.common.utils.custom_exceptions import NotFoundException, NoAvailableRooms
 from pydantic import ValidationError
 
 TABLE_NAME = os.environ.get("TABLE_NAME")
-AUTO_CHECKOUT_LAMBDA_ARN=os.environ.get("AUTO_CHECKOUT_LAMBDA_ARN")
-SCHEDULER_ROLE_ARN=os.environ.get("SCHEDULER_ROLE_ARN")
+AUTO_CHECKOUT_LAMBDA_ARN = os.environ.get("AUTO_CHECKOUT_LAMBDA_ARN")
+SCHEDULER_ROLE_ARN = os.environ.get("SCHEDULER_ROLE_ARN")
 
 dynamodb = resource("dynamodb", region_name="ap-south-1")
 table = dynamodb.Table(TABLE_NAME)
@@ -23,13 +23,13 @@ table = dynamodb.Table(TABLE_NAME)
 booking_repo = BookingRepository(table)
 user_repo = UserRepository(table)
 room_repo = RoomRepository(table)
-scheduler_service = SchedulerService(AUTO_CHECKOUT_LAMBDA_ARN,SCHEDULER_ROLE_ARN)
+scheduler_service = SchedulerService(AUTO_CHECKOUT_LAMBDA_ARN, SCHEDULER_ROLE_ARN)
 
 booking_service = BookingService(
     booking_repo=booking_repo,
     user_repo=user_repo,
     room_repo=room_repo,
-    schedule_service=scheduler_service
+    schedule_service=scheduler_service,
 )
 
 
@@ -38,7 +38,7 @@ def create_booking(event, context):
         return send_custom_response(400, "Request body is required")
 
     try:
-        request_body=BookingRequest.model_validate_json(event["body"])
+        request_body = BookingRequest.model_validate_json(event["body"])
     except ValidationError as e:
         return send_custom_response(400, e.errors())
     try:
@@ -46,14 +46,10 @@ def create_booking(event, context):
     except KeyError:
         return send_custom_response(401, "Unauthorized")
 
-
     try:
         booking_service.add_booking(request_body, user_id)
 
-        return send_custom_response(
-            201,
-            "Booking created successfully"
-        )
+        return send_custom_response(201, "Booking created successfully")
 
     except ValueError:
         allowed = ", ".join(c.value for c in Category)

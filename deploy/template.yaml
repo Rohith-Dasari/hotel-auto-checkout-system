@@ -16,16 +16,27 @@ Globals:
     Timeout: 20
     Runtime: python3.13
     CodeUri: ..
+    Layers:
+      - !Ref DepsLayer
 
     Environment:
       Variables:
         TABLE_NAME: !Ref TableName
-        PYTHONPATH: "/var/task"
         PYTHONUNBUFFERED: "1"
         JWT_SECRET: !Ref JwtSecret
         JWT_ALGORITHM: "HS256"
 
 Resources:
+  DepsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: deps-layer
+      Description: Python dependencies 
+      ContentUri: ../layers/deps
+      CompatibleRuntimes:
+        - python3.13
+      RetentionPolicy: Retain
+
   ApiGateway:
     Type: AWS::Serverless::Api
     Properties:
