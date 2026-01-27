@@ -41,6 +41,8 @@ def create_booking(event, context):
         request_body = BookingRequest.model_validate_json(event["body"])
     except ValidationError as e:
         return send_custom_response(400, e.errors())
+    except ValueError as e:
+        return send_custom_response(400, str(e))
     try:
         user_id = event["requestContext"]["authorizer"]["user_id"]
     except KeyError:
