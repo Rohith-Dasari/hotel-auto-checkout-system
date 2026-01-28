@@ -5,7 +5,8 @@ from boto3.dynamodb.conditions import Key
 from src.common.models.rooms import Room, Category, RoomStatus
 from datetime import datetime, timezone, timedelta
 from src.common.utils.custom_exceptions import NotFoundException
-
+from src.common.utils.constants import MAX_STAY
+from src.common.utils.datetime_normaliser import from_iso_string
 
 from typing import TYPE_CHECKING
 
@@ -138,30 +139,18 @@ class RoomRepository:
     def _to_iso(self, dt: datetime) -> str:
         return self._to_utc(dt).isoformat()
 
-    def _from_iso(self, value: str) -> datetime:
-        dt = datetime.fromisoformat(value)
-        if dt.tzinfo is None:
-            raise ValueError("Stored datetime must be timezone-aware")
-        return dt.astimezone(timezone.utc)
-
     def get_available_rooms(
         self, category: Category, checkin: datetime, checkout: datetime
     ) -> list[str]:
-
         requested_checkin = self._to_utc(checkin)
         requested_checkout = self._to_utc(checkout)
-
-        MAX_STAY = timedelta(days=30)
-
-        lower_iso = self._to_iso(requested_checkin - MAX_STAY)
+        max_stay_delta = timedelta(days=MAX_STAY)
+        lower_iso = self._to_iso(requested_checkin - max_stay_delta)
         upper_iso = self._to_iso(requested_checkout)
-
         rooms = self.get_rooms_ids_by_category(category)
         all_room_ids: set[str] = set(rooms)
-
         if not all_room_ids:
             return []
-
         blocked_rooms: set[str] = set()
         try:
             resp = self.table.query(
@@ -173,19 +162,16 @@ class RoomRepository:
                     )
                 )
             )
-
             for item in resp.get("Items", []):
-                existing_checkout = self._from_iso(item["checkout"])
-                existing_checkin = self._from_iso(
+                existing_checkout = from_iso_string(item["checkout"])
+                existing_checkin = from_iso_string(
                     item["sk"].split("CHECKIN#", 1)[1].split("#ROOM#", 1)[0]
                 )
-
                 if (
                     requested_checkin < existing_checkout
                     and existing_checkin < requested_checkout
                 ):
                     blocked_rooms.add(item["room_id"])
-
             while "LastEvaluatedKey" in resp:
                 resp = self.table.query(
                     KeyConditionExpression=(
@@ -198,21 +184,18 @@ class RoomRepository:
                     ExclusiveStartKey=resp["LastEvaluatedKey"],
                 )
                 for item in resp.get("Items", []):
-                    existing_checkout = self._from_iso(item["checkout"])
-                    existing_checkin = self._from_iso(
+                    existing_checkout = from_iso_string(item["checkout"])
+                    existing_checkin = from_iso_string(
                         item["sk"].split("CHECKIN#", 1)[1].split("#ROOM#", 1)[0]
                     )
-
                     if (
                         requested_checkin < existing_checkout
                         and existing_checkin < requested_checkout
                     ):
                         blocked_rooms.add(item["room_id"])
-
         except ClientError as err:
             logger.error(
                 f"Error retrieving bookings for {category.value} between {lower_iso} and {upper_iso}: {err}"
             )
             raise
-
         return list(all_room_ids - blocked_rooms)

@@ -19,30 +19,16 @@ class RoomService:
     ):
         self.room_repo.update_room_status(room_id, status)
         
-    def _ensure_datetime(self, value):
-        if isinstance(value, datetime):
-            dt = value
-        else:
-            dt = datetime.fromisoformat(value)
+    def get_available_rooms(self, category: Category, checkin:datetime, checkout:datetime):
 
-        if dt.tzinfo is None:
-            raise InvalidDates("checkin/checkout must include timezone info")
-
-        return dt.astimezone(timezone.utc)
-
-    def get_available_rooms(self, category: Category, checkin, checkout):
-
-        checkin_dt = self._ensure_datetime(checkin)
-        checkout_dt = self._ensure_datetime(checkout)
-
-        if checkout_dt <= checkin_dt:
+        if checkout <= checkin:
             raise InvalidDates(
                 "checkout must be after checkin"
             )
 
-        rooms = self.room_repo.get_available_rooms(category, checkin_dt, checkout_dt)
+        rooms = self.room_repo.get_available_rooms(category, checkin, checkout)
 
         if not rooms:
-            raise NoAvailableRooms(f"no {category.value} for {checkin_dt} to {checkout_dt}")
+            raise NoAvailableRooms(f"no {category.value} for {checkin} to {checkout}")
         return rooms 
              

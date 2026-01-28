@@ -88,6 +88,8 @@ class TestBookingRepository(unittest.TestCase):
         self.assertTrue(avail_put["sk"].startswith(f"CHECKIN#"))
         self.assertEqual(avail_put["room_id"], self.booking.room_id)
         self.assertEqual(avail_put["booking_id"], self.booking.booking_id)
+        self.assertIn("ttl_attribute", avail_put)
+        self.assertEqual(avail_put["ttl_attribute"], int(self.booking.checkout.timestamp()))
 
     def test_add_booking_client_error(self):
         self.client.transact_write_items.side_effect = ClientError(

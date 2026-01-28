@@ -4,6 +4,7 @@ from typing import Optional, List
 from boto3.dynamodb.conditions import Key
 from src.common.models.bookings import Booking, BookingStatus
 from src.common.models.rooms import Category, RoomStatus
+from src.common.utils.datetime_normaliser import from_iso_string
 from decimal import Decimal
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
@@ -135,16 +136,8 @@ class BookingRepository:
 
         bookings = []
         for item in items:
-            checkin_dt = (
-                datetime.fromisoformat(item["check_in"])
-                if isinstance(item["check_in"], str)
-                else item["check_in"]
-            )
-            checkout_dt = (
-                datetime.fromisoformat(item["check_out"])
-                if isinstance(item["check_out"], str)
-                else item["check_out"]
-            )
+            checkin_dt=from_iso_string(item["check_in"])
+            checkout_dt = from_iso_string(item["check_out"])
             booked_at_dt = (
                 datetime.fromisoformat(item["booked_at"])
                 if isinstance(item["booked_at"], str)
@@ -180,16 +173,8 @@ class BookingRepository:
         if not item:
             return None
 
-        checkin_dt = (
-            datetime.fromisoformat(item["check_in"])
-            if isinstance(item["check_in"], str)
-            else item["check_in"]
-        )
-        checkout_dt = (
-            datetime.fromisoformat(item["check_out"])
-            if isinstance(item["check_out"], str)
-            else item["check_out"]
-        )
+        checkin_dt=from_iso_string(item["check_in"])
+        checkout_dt = from_iso_string(item["check_out"])
         booked_at_dt = (
             datetime.fromisoformat(item["booked_at"])
             if isinstance(item["booked_at"], str)

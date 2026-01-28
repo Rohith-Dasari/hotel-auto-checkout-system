@@ -23,26 +23,6 @@ class TestRoomService(unittest.TestCase):
             RoomStatus.HOUSEKEEPING
         )
 
-    def test_ensure_datetime_with_datetime(self):
-        dt = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
-
-        result = self.service._ensure_datetime(dt)
-
-        self.assertEqual(result, dt)
-
-    def test_ensure_datetime_with_iso_string(self):
-        dt_str = "2026-01-01T12:00:00+05:30"
-
-        result = self.service._ensure_datetime(dt_str)
-
-        self.assertEqual(result.tzinfo, timezone.utc)
-
-    def test_ensure_datetime_missing_timezone(self):
-        dt_str = "2026-01-01T12:00:00"
-
-        with self.assertRaises(InvalidDates):
-            self.service._ensure_datetime(dt_str)
-
     def test_get_available_rooms_success(self):
         checkin = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
         checkout = datetime(2026, 1, 2, 12, 0, tzinfo=timezone.utc)

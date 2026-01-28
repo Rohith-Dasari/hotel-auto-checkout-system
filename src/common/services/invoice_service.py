@@ -1,5 +1,4 @@
 from src.common.models.invoice import Invoice
-from src.common.models.bookings import Booking
 from src.common.repository.booking_repo import BookingRepository
 from src.common.utils.custom_exceptions import NotFoundException
 import boto3

@@ -9,6 +9,18 @@ from src.common.utils.custom_exceptions import NotFoundException
 
 
 class TestRoomRepository(unittest.TestCase):
+    def setUp(self):
+        self.table = MagicMock()
+        self.client = MagicMock()
+
+        self.table.meta.client = self.client
+        self.repo = RoomRepository(self.table, self.client)
+
+        patcher = unittest.mock.patch("src.common.utils.datetime_normaliser.from_iso_string")
+        self.addCleanup(patcher.stop)
+        self.mock_from_iso = patcher.start()
+        # Default: just use datetime.fromisoformat
+        self.mock_from_iso.side_effect = lambda s: datetime.fromisoformat(s) if isinstance(s, str) else s
 
     def test_add_room_success(self):
         room = Room(room_id="r1", category=Category.DELUXE)
@@ -179,10 +191,9 @@ class TestRoomRepository(unittest.TestCase):
 
     def test_to_iso_and_from_iso_roundtrip(self):
         dt = datetime.now(timezone.utc)
-
         iso = self.repo._to_iso(dt)
-        parsed = self.repo._from_iso(iso)
-
+        from src.common.utils.datetime_normaliser import from_iso_string
+        parsed = from_iso_string(iso)
         self.assertEqual(parsed, dt)
 
 
@@ -191,13 +202,22 @@ class TestRoomRepository(unittest.TestCase):
         checkin = now + timedelta(days=1)
         checkout = now + timedelta(days=2)
         self.repo.get_rooms_ids_by_category = MagicMock(return_value=["r1", "r2"])
-
+        def fake_from_iso(s):
+            if "r1" in s:
+                if "checkout" in s:
+                    return checkin + timedelta(hours=1)
+                else:
+                    return checkin
+            return datetime.fromisoformat(s)
+        patcher = unittest.mock.patch("src.common.utils.datetime_normaliser.from_iso_string", side_effect=fake_from_iso)
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.table.query.return_value = {
             "Items": [
                 {
                     "room_id": "r1",
-                    "checkout": self.repo._to_iso(checkin + timedelta(hours=1)),
-                    "sk": f"CHECKIN#{self.repo._to_iso(checkin)}#ROOM#r1"
+                    "checkout": (checkin + timedelta(hours=1)).isoformat(),
+                    "sk": f"CHECKIN#{checkin.isoformat()}#ROOM#r1"
                 }
             ]
         }
@@ -209,14 +229,28 @@ class TestRoomRepository(unittest.TestCase):
         checkin = now + timedelta(days=1)
         checkout = now + timedelta(days=2)
         self.repo.get_rooms_ids_by_category = MagicMock(return_value=["r1", "r2", "r3"])
-
+        def fake_from_iso(s):
+            if "r1" in s:
+                if "checkout" in s:
+                    return checkin + timedelta(hours=1)
+                else:
+                    return checkin
+            if "r2" in s:
+                if "checkout" in s:
+                    return checkin + timedelta(hours=2)
+                else:
+                    return checkin
+            return datetime.fromisoformat(s)
+        patcher = unittest.mock.patch("src.common.utils.datetime_normaliser.from_iso_string", side_effect=fake_from_iso)
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.table.query.side_effect = [
             {
                 "Items": [
                     {
                         "room_id": "r1",
-                        "checkout": self.repo._to_iso(checkin + timedelta(hours=1)),
-                        "sk": f"CHECKIN#{self.repo._to_iso(checkin)}#ROOM#r1"
+                        "checkout": (checkin + timedelta(hours=1)).isoformat(),
+                        "sk": f"CHECKIN#{checkin.isoformat()}#ROOM#r1"
                     }
                 ],
                 "LastEvaluatedKey": True
@@ -225,8 +259,8 @@ class TestRoomRepository(unittest.TestCase):
                 "Items": [
                     {
                         "room_id": "r2",
-                        "checkout": self.repo._to_iso(checkin + timedelta(hours=2)),
-                        "sk": f"CHECKIN#{self.repo._to_iso(checkin)}#ROOM#r2"
+                        "checkout": (checkin + timedelta(hours=2)).isoformat(),
+                        "sk": f"CHECKIN#{checkin.isoformat()}#ROOM#r2"
                     }
                 ]
             }
@@ -237,6 +271,8 @@ class TestRoomRepository(unittest.TestCase):
     def test_get_available_rooms_no_rooms_in_category(self):
         self.repo.get_rooms_ids_by_category = MagicMock(return_value=[])
         now = datetime.now(timezone.utc)
+        import sys
+        sys.modules["src.common.utils.constants"].MAX_STAY = 30
         available = self.repo.get_available_rooms(
             Category.DELUXE,
             now + timedelta(days=1),
@@ -253,6 +289,8 @@ class TestRoomRepository(unittest.TestCase):
             error_response={"Error": {"Message": "Query failed"}},
             operation_name="Query"
         )
+        import sys
+        sys.modules["src.common.utils.constants"].MAX_STAY = 30
         with self.assertRaises(ClientError):
             self.repo.get_available_rooms(Category.DELUXE, checkin, checkout)
 
@@ -275,13 +313,13 @@ class TestRoomRepository(unittest.TestCase):
         now = datetime.now(timezone.utc)
         checkin = now + timedelta(days=1)
         checkout = now + timedelta(days=2)
-
         self.repo.get_rooms_ids_by_category = MagicMock(return_value=["r1"])
         self.table.query.side_effect = ClientError(
             error_response={"Error": {"Message": "Query failed"}},
             operation_name="Query"
         )
-
+        import sys
+        sys.modules["src.common.utils.constants"].MAX_STAY = 30
         with self.assertRaises(ClientError):
             self.repo.get_available_rooms(Category.DELUXE, checkin, checkout)
 

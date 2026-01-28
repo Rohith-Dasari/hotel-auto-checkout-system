@@ -22,9 +22,9 @@ invoice_service=InvoiceService(booking_repo)
 
 
 def auto_checkout(event, context):
-    booking_id = event.get("booking_id") or event.get("bookingId")
-    room_id = event.get("room_id") or event.get("roomId")
-    user_id = event.get("user_id") or event.get("userId")
+    booking_id = event.get("booking_id") 
+    room_id = event.get("room_id") 
+    user_id = event.get("user_id") 
 
     if not booking_id or not room_id or not user_id:
         raise KeyError("Missing booking_id, room_id, or user_id in event")

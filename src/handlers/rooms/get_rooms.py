@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime,timezone
 from boto3 import resource
 
 from src.common.repository.room_repo import RoomRepository
@@ -26,7 +26,7 @@ def _parse_iso_datetime(value: str) -> datetime:
     dt = datetime.fromisoformat(value)
     if dt.tzinfo is None:
         raise ValueError("Datetime must include timezone offset")
-    return dt
+    return dt.astimezone(timezone.utc)
 
 
 def get_rooms(event, context):
