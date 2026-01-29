@@ -6,3 +6,5 @@ samconfig.toml
 htmlcov
 .coverage
 python
+metc.py
+spiral_matrix.py

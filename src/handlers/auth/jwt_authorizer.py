@@ -2,7 +2,7 @@ import os
 import jwt
 
 JWT_SECRET = os.environ.get("JWT_SECRET")
-JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
+JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM")
 
 if not JWT_SECRET:
     raise RuntimeError("JWT_SECRET environment variable is not set")
@@ -24,9 +24,7 @@ def _generate_policy(principal_id, effect, resource, context=None):
     }
 
     if context:
-        auth_response["context"] = {
-            k: str(v) for k, v in context.items()
-        }
+        auth_response["context"] = {k: str(v) for k, v in context.items()}
 
     return auth_response
 
@@ -39,19 +37,8 @@ def _get_stage_arn(method_arn: str) -> str:
 def lambda_handler(event, context):
     print("Full Event:", event)
 
-    if event.get("httpMethod") == "OPTIONS":
-        return _generate_policy(
-            principal_id="cors-preflight",
-            effect="Allow",
-            resource=event.get("methodArn")
-        )
-
     try:
         token = event.get("authorizationToken")
-
-        if not token:
-            headers = event.get("headers") or {}
-            token = headers.get("Authorization") or headers.get("authorization")
 
         if not token:
             raise Exception("Missing Authorization header")
