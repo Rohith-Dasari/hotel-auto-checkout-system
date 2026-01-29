@@ -25,26 +25,27 @@ class RoomRepository:
     def __init__(self, table: Table, client: DynamoDBClient = None):
         self.table = table
         self.client = client if client else table.meta.client
-    def add_room(self, room:Room):
-        room_item={
-            "pk":f"ROOM#{room.room_id}",
-            "sk":f"DETAILS",
-            "category":room.category.value,
-            "room_status":room.status.value
+
+    def add_room(self, room: Room):
+        room_item = {
+            "pk": f"ROOM#{room.room_id}",
+            "sk": f"DETAILS",
+            "category": room.category.value,
+            "room_status": room.status.value,
         }
-        category_item={
-            "pk":f"CATEGORY#{room.category.value}",
-            "sk":f"ROOM#{room.room_id}"
+        category_item = {
+            "pk": f"CATEGORY#{room.category.value}",
+            "sk": f"ROOM#{room.room_id}",
         }
         try:
             self.client.transact_write_items(
                 TransactItems=[
                     {
                         "Put": {
-                                "TableName": self.table.name,
-                                "Item": room_item,
-                                "ConditionExpression": "attribute_not_exists(pk)",
-                            }
+                            "TableName": self.table.name,
+                            "Item": room_item,
+                            "ConditionExpression": "attribute_not_exists(pk)",
+                        }
                     },
                     {
                         "Put": {
@@ -53,12 +54,10 @@ class RoomRepository:
                         }
                     },
                 ]
-                
             )
         except ClientError as err:
             logger.error(f"Error creating booking {room.room_id}: {err}")
             raise
-        
 
     def get_room_by_id(self, room_id: str) -> Optional[Room]:
         try:

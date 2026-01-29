@@ -15,7 +15,7 @@ Globals:
       - arm64
     Timeout: 20
     Runtime: python3.13
-    CodeUri: ..
+    CodeUri: src/
     Layers:
       - !Ref DepsLayer
 
