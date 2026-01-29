@@ -136,13 +136,9 @@ class BookingRepository:
 
         bookings = []
         for item in items:
-            checkin_dt=from_iso_string(item["check_in"])
+            checkin_dt = from_iso_string(item["check_in"])
             checkout_dt = from_iso_string(item["check_out"])
-            booked_at_dt = (
-                datetime.fromisoformat(item["booked_at"])
-                if isinstance(item["booked_at"], str)
-                else item["booked_at"]
-            )
+            booked_at_dt = datetime.fromisoformat(item["booked_at"])
 
             booking = Booking(
                 booking_id=item["sk"].removeprefix("BOOKING#"),
@@ -173,13 +169,9 @@ class BookingRepository:
         if not item:
             return None
 
-        checkin_dt=from_iso_string(item["check_in"])
+        checkin_dt = from_iso_string(item["check_in"])
         checkout_dt = from_iso_string(item["check_out"])
-        booked_at_dt = (
-            datetime.fromisoformat(item["booked_at"])
-            if isinstance(item["booked_at"], str)
-            else item["booked_at"]
-        )
+        booked_at_dt = datetime.fromisoformat(item["booked_at"])
 
         return Booking(
             booking_id=booking_id,
