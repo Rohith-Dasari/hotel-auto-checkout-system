@@ -2,9 +2,9 @@ import unittest
 from unittest.mock import MagicMock
 from datetime import datetime, timezone
 
-from src.common.services.room_service import RoomService
-from src.common.models.rooms import Category, RoomStatus
-from src.common.utils.custom_exceptions import NoAvailableRooms, InvalidDates
+from common.services.room_service import RoomService
+from common.models.rooms import Category, RoomStatus
+from common.utils.custom_exceptions import NoAvailableRooms, InvalidDates
 
 
 class TestRoomService(unittest.TestCase):
@@ -63,7 +63,7 @@ class TestRoomService(unittest.TestCase):
                 checkout
             )
     def test_add_room_calls_repo(self):
-        from src.common.models.rooms import Room
+        from common.models.rooms import Room
         room_id = "room-123"
         category = Category.DELUXE
 

@@ -3,18 +3,18 @@ import json
 import os
 import unittest
 from unittest.mock import MagicMock, patch
-from src.common.models.users import UserRole
-from src.common.utils.custom_exceptions import NotFoundException
+from common.models.users import UserRole
+from common.utils.custom_exceptions import NotFoundException
 
 class GetUserBookingsTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.env = patch.dict(os.environ, {"TABLE_NAME": "test-table"}, clear=False)
         cls.env.start()
-        cls.resource = patch("src.handlers.bookings.get_bookings.resource")
+        cls.resource = patch("handlers.bookings.get_bookings.resource")
         mock_res = cls.resource.start()
         mock_res.return_value.Table.return_value = MagicMock()
-        import src.handlers.bookings.get_bookings as mod
+        import handlers.bookings.get_bookings as mod
         cls.mod = importlib.reload(mod)
 
     @classmethod
@@ -23,7 +23,7 @@ class GetUserBookingsTests(unittest.TestCase):
 
     def setUp(self):
         self.p_send = patch(
-            "src.handlers.bookings.get_bookings.send_custom_response",
+            "handlers.bookings.get_bookings.send_custom_response",
             side_effect=lambda status_code, message=None, data=None: {
                 "statusCode": status_code,
                 "body": json.dumps({"message": message, "data": data})

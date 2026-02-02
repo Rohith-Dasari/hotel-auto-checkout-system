@@ -2,11 +2,11 @@ import unittest
 from unittest.mock import MagicMock, patch
 from datetime import datetime, timezone, timedelta
 
-from src.common.services.booking_service import BookingService
-from src.common.models.bookings import BookingStatus
-from src.common.models.rooms import Category
-from src.common.schemas.bookings import BookingRequest
-from src.common.utils.custom_exceptions import NotFoundException, NoAvailableRooms
+from common.services.booking_service import BookingService
+from common.models.bookings import BookingStatus
+from common.models.rooms import Category
+from common.schemas.bookings import BookingRequest
+from common.utils.custom_exceptions import NotFoundException, NoAvailableRooms
 
 
 class TestBookingService(unittest.TestCase):
@@ -35,7 +35,7 @@ class TestBookingService(unittest.TestCase):
             checkout=now + timedelta(days=2),
         )
 
-    @patch("src.common.services.booking_service.random.choice", return_value="room42")
+    @patch("common.services.booking_service.random.choice", return_value="room42")
     def test_add_booking_success(self, _):
         self.user_repo.get_by_id.return_value = self.user
         self.room_repo.get_category_price.return_value = "1500"
@@ -118,7 +118,7 @@ class TestBookingService(unittest.TestCase):
         with self.assertRaises(NotFoundException):
             self.service.get_user_bookings("missing-user")
 
-    @patch("src.common.services.booking_service.random.choice", return_value="room99")
+    @patch("common.services.booking_service.random.choice", return_value="room99")
     def test_allocate_room_picks_room(self, _):
         self.room_repo.get_available_rooms.return_value = ["room1", "room99"]
 

@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from botocore.exceptions import ClientError
-from src.common.utils.custom_exceptions import NotFoundException
+from common.utils.custom_exceptions import NotFoundException
 
 
 class TestAutoCheckout(unittest.TestCase):
@@ -19,11 +19,11 @@ class TestAutoCheckout(unittest.TestCase):
         )
         cls.env.start()
 
-        cls.resource = patch("src.handlers.checkout.auto_checkout.resource")
+        cls.resource = patch("handlers.checkout.auto_checkout.resource")
         mock_res = cls.resource.start()
         mock_res.return_value.Table.return_value = MagicMock()
 
-        import src.handlers.checkout.auto_checkout as mod
+        import handlers.checkout.auto_checkout as mod
         cls.mod = importlib.reload(mod)
 
     @classmethod

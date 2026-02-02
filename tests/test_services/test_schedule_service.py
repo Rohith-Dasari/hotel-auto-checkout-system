@@ -3,12 +3,12 @@ from unittest.mock import MagicMock, patch
 from datetime import datetime, timezone, timedelta
 import json
 
-from src.common.services.schedule_service import SchedulerService
+from common.services.schedule_service import SchedulerService
 
 
 class TestSchedulerService(unittest.TestCase):
 
-    @patch("src.common.services.schedule_service.boto3.client")
+    @patch("common.services.schedule_service.boto3.client")
     def setUp(self, mock_boto_client):
         self.mock_client = MagicMock()
 

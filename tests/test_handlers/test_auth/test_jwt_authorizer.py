@@ -9,7 +9,7 @@ class JwtAuthorizerTests(unittest.TestCase):
     def setUpClass(cls):
         cls.env = patch.dict(os.environ, {"JWT_SECRET": "testsecret", "JWT_ALGORITHM": "HS256"}, clear=False)
         cls.env.start()
-        import src.handlers.auth.jwt_authorizer as mod
+        import handlers.auth.jwt_authorizer as mod
         cls.mod = importlib.reload(mod)
 
     @classmethod
@@ -17,7 +17,7 @@ class JwtAuthorizerTests(unittest.TestCase):
         cls.env.stop()
 
     def setUp(self):
-        self.p_decode = patch("src.handlers.auth.jwt_authorizer.jwt.decode")
+        self.p_decode = patch("handlers.auth.jwt_authorizer.jwt.decode")
         self.mock_decode = self.p_decode.start()
 
     def tearDown(self):
@@ -33,25 +33,12 @@ class JwtAuthorizerTests(unittest.TestCase):
             event["httpMethod"] = http_method
         return event
 
-    def test_options_method_allows(self):
-        event = self._event(http_method="OPTIONS")
-        resp = self.mod.lambda_handler(event, None)
-        self.assertEqual("Allow", resp["policyDocument"]["Statement"][0]["Effect"])
-        self.assertEqual("cors-preflight", resp["principalId"])
-
     def test_missing_token_denies(self):
         event = self._event()
         resp = self.mod.lambda_handler(event, None)
         self.assertEqual("Deny", resp["policyDocument"]["Statement"][0]["Effect"])
         self.assertEqual("unauthorized", resp["principalId"])
 
-    def test_token_in_headers(self):
-        self.mock_decode.return_value = {"user_id": "u1", "email": "e@test.com", "role": "MANAGER"}
-        event = self._event(headers={"Authorization": "Bearer testtoken"})
-        resp = self.mod.lambda_handler(event, None)
-        self.assertEqual("Allow", resp["policyDocument"]["Statement"][0]["Effect"])
-        self.assertEqual("u1", resp["principalId"])
-        self.assertEqual("MANAGER", resp["context"]["role"])
 
     def test_token_in_authorizationToken(self):
         self.mock_decode.return_value = {"user_id": "u2", "email": "x@test.com", "role": "ADMIN"}

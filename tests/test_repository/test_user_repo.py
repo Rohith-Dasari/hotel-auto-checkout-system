@@ -2,8 +2,8 @@ import unittest
 from unittest.mock import MagicMock
 from botocore.exceptions import ClientError
 
-from src.common.repository.user_repo import UserRepository
-from src.common.models.users import User, UserRole
+from common.repository.user_repo import UserRepository
+from common.models.users import User, UserRole
 
 
 class TestUserRepository(unittest.TestCase):

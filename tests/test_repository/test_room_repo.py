@@ -3,9 +3,9 @@ from unittest.mock import MagicMock
 from datetime import datetime, timezone, timedelta
 from botocore.exceptions import ClientError
 
-from src.common.repository.room_repo import RoomRepository
-from src.common.models.rooms import Category, RoomStatus, Room
-from src.common.utils.custom_exceptions import NotFoundException
+from common.repository.room_repo import RoomRepository
+from common.models.rooms import Category, RoomStatus, Room
+from common.utils.custom_exceptions import NotFoundException
 
 
 class TestRoomRepository(unittest.TestCase):
@@ -16,7 +16,7 @@ class TestRoomRepository(unittest.TestCase):
         self.table.meta.client = self.client
         self.repo = RoomRepository(self.table, self.client)
 
-        patcher = unittest.mock.patch("src.common.utils.datetime_normaliser.from_iso_string")
+        patcher = unittest.mock.patch("common.utils.datetime_normaliser.from_iso_string")
         self.addCleanup(patcher.stop)
         self.mock_from_iso = patcher.start()
         # Default: just use datetime.fromisoformat
@@ -192,7 +192,7 @@ class TestRoomRepository(unittest.TestCase):
     def test_to_iso_and_from_iso_roundtrip(self):
         dt = datetime.now(timezone.utc)
         iso = self.repo._to_iso(dt)
-        from src.common.utils.datetime_normaliser import from_iso_string
+        from common.utils.datetime_normaliser import from_iso_string
         parsed = from_iso_string(iso)
         self.assertEqual(parsed, dt)
 
@@ -209,7 +209,7 @@ class TestRoomRepository(unittest.TestCase):
                 else:
                     return checkin
             return datetime.fromisoformat(s)
-        patcher = unittest.mock.patch("src.common.utils.datetime_normaliser.from_iso_string", side_effect=fake_from_iso)
+        patcher = unittest.mock.patch("common.utils.datetime_normaliser.from_iso_string", side_effect=fake_from_iso)
         patcher.start()
         self.addCleanup(patcher.stop)
         self.table.query.return_value = {
@@ -241,7 +241,7 @@ class TestRoomRepository(unittest.TestCase):
                 else:
                     return checkin
             return datetime.fromisoformat(s)
-        patcher = unittest.mock.patch("src.common.utils.datetime_normaliser.from_iso_string", side_effect=fake_from_iso)
+        patcher = unittest.mock.patch("common.utils.datetime_normaliser.from_iso_string", side_effect=fake_from_iso)
         patcher.start()
         self.addCleanup(patcher.stop)
         self.table.query.side_effect = [
@@ -272,7 +272,7 @@ class TestRoomRepository(unittest.TestCase):
         self.repo.get_rooms_ids_by_category = MagicMock(return_value=[])
         now = datetime.now(timezone.utc)
         import sys
-        sys.modules["src.common.utils.constants"].MAX_STAY = 30
+        sys.modules["common.utils.constants"].MAX_STAY = 30
         available = self.repo.get_available_rooms(
             Category.DELUXE,
             now + timedelta(days=1),
@@ -290,7 +290,7 @@ class TestRoomRepository(unittest.TestCase):
             operation_name="Query"
         )
         import sys
-        sys.modules["src.common.utils.constants"].MAX_STAY = 30
+        sys.modules["common.utils.constants"].MAX_STAY = 30
         with self.assertRaises(ClientError):
             self.repo.get_available_rooms(Category.DELUXE, checkin, checkout)
 
@@ -319,7 +319,7 @@ class TestRoomRepository(unittest.TestCase):
             operation_name="Query"
         )
         import sys
-        sys.modules["src.common.utils.constants"].MAX_STAY = 30
+        sys.modules["common.utils.constants"].MAX_STAY = 30
         with self.assertRaises(ClientError):
             self.repo.get_available_rooms(Category.DELUXE, checkin, checkout)
 

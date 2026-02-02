@@ -2,9 +2,9 @@ import unittest
 from unittest.mock import MagicMock, patch
 import bcrypt
 
-from src.common.services.user_service import UserService
-from src.common.models.users import User, UserRole
-from src.common.utils.custom_exceptions import (
+from common.services.user_service import UserService
+from common.models.users import User, UserRole
+from common.utils.custom_exceptions import (
     IncorrectCredentials,
     UserAlreadyExists,
     NotFoundException,
@@ -55,7 +55,7 @@ class TestUserService(unittest.TestCase):
         with self.assertRaises(NotFoundException):
             self.service.get_user_by_mail("test@example.com")
 
-    @patch("src.common.services.user_service.create_jwt")
+    @patch("common.services.user_service.create_jwt")
     def test_login_success(self, mock_jwt):
         password = "StrongPass!123"
         hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
@@ -85,7 +85,7 @@ class TestUserService(unittest.TestCase):
             self.service.login("test@example.com", "WrongPass!123")
 
 
-    @patch("src.common.services.user_service.create_jwt")
+    @patch("common.services.user_service.create_jwt")
     def test_signup_success(self, mock_jwt):
         self.repo.get_by_mail.return_value = None
         mock_jwt.return_value = "fake-token"

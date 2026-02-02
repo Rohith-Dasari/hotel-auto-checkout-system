@@ -5,8 +5,8 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from botocore.exceptions import ClientError
-from src.common.models.users import UserRole
-from src.common.models.rooms import Category
+from common.models.users import UserRole
+from common.models.rooms import Category
 
 
 class AddRoomTests(unittest.TestCase):
@@ -14,10 +14,10 @@ class AddRoomTests(unittest.TestCase):
 	def setUpClass(cls):
 		cls.env = patch.dict(os.environ, {"TABLE_NAME": "test-table"}, clear=False)
 		cls.env.start()
-		cls.resource = patch("src.handlers.rooms.add_room.resource")
+		cls.resource = patch("handlers.rooms.add_room.resource")
 		mock_res = cls.resource.start()
 		mock_res.return_value.Table.return_value = MagicMock()
-		import src.handlers.rooms.add_room as mod
+		import handlers.rooms.add_room as mod
 		cls.mod = importlib.reload(mod)
 
 	@classmethod
@@ -27,7 +27,7 @@ class AddRoomTests(unittest.TestCase):
 
 	def setUp(self):
 		self.p_send = patch(
-			"src.handlers.rooms.add_room.send_custom_response",
+			"handlers.rooms.add_room.send_custom_response",
 			side_effect=lambda status_code, message=None, data=None: {
 				"statusCode": status_code,
 				"body": json.dumps({"message": message, "data": data}),

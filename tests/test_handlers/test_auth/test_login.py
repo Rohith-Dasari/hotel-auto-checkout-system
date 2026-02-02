@@ -11,10 +11,10 @@ class LoginHandlerTests(unittest.TestCase):
     def setUpClass(cls):
         cls.env = patch.dict(os.environ, {"TABLE_NAME": "test-table"}, clear=False)
         cls.env.start()
-        cls.resource = patch("src.handlers.auth.login.resource")
+        cls.resource = patch("handlers.auth.login.resource")
         mock_resource = cls.resource.start()
         mock_resource.return_value.Table.return_value = MagicMock()
-        import src.handlers.auth.login as login_module
+        import handlers.auth.login as login_module
         cls.mod = importlib.reload(login_module)
 
     @classmethod
@@ -24,13 +24,13 @@ class LoginHandlerTests(unittest.TestCase):
 
     def setUp(self):
         self.p_send = patch(
-            "src.handlers.auth.login.send_custom_response",
+            "handlers.auth.login.send_custom_response",
             side_effect=lambda status_code, message=None, data=None: {
                 "statusCode": status_code,
                 "body": json.dumps({"message": message, "data": data})
             },
         )
-        self.p_validate = patch("src.handlers.auth.login.LoginRequest.model_validate_json")
+        self.p_validate = patch("handlers.auth.login.LoginRequest.model_validate_json")
         self.p_login = patch.object(self.mod.service, "login")
         self.mock_send = self.p_send.start()
         self.mock_validate = self.p_validate.start()
@@ -58,7 +58,7 @@ class LoginHandlerTests(unittest.TestCase):
         self.assertEqual(400, resp["statusCode"])
 
     def test_incorrect_credentials(self):
-        from src.common.utils.custom_exceptions import IncorrectCredentials
+        from common.utils.custom_exceptions import IncorrectCredentials
         self.mock_validate.return_value.email = "u@test.com"
         self.mock_validate.return_value.password = "pw"
         self.mock_login.side_effect = IncorrectCredentials("bad")
@@ -66,7 +66,7 @@ class LoginHandlerTests(unittest.TestCase):
         self.assertEqual(401, resp["statusCode"])
 
     def test_not_found(self):
-        from src.common.utils.custom_exceptions import NotFoundException
+        from common.utils.custom_exceptions import NotFoundException
         self.mock_validate.return_value.email = "u@test.com"
         self.mock_validate.return_value.password = "pw"
         self.mock_login.side_effect = NotFoundException("user", "id", 404)

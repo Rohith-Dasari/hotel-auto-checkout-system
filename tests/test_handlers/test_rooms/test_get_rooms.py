@@ -1,17 +1,17 @@
 import importlib, json, os, unittest
 from unittest.mock import MagicMock, patch
-from src.common.models.users import UserRole
-from src.common.utils.custom_exceptions import NoAvailableRooms, InvalidDates
+from common.models.users import UserRole
+from common.utils.custom_exceptions import NoAvailableRooms, InvalidDates
 
 class GetRoomsTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.env = patch.dict(os.environ, {"TABLE_NAME": "test-table"}, clear=False)
         cls.env.start()
-        cls.resource = patch("src.handlers.rooms.get_rooms.resource")
+        cls.resource = patch("handlers.rooms.get_rooms.resource")
         mock_res = cls.resource.start()
         mock_res.return_value.Table.return_value = MagicMock()
-        import src.handlers.rooms.get_rooms as mod
+        import handlers.rooms.get_rooms as mod
         cls.mod = importlib.reload(mod)
 
     @classmethod
@@ -20,14 +20,14 @@ class GetRoomsTests(unittest.TestCase):
 
     def setUp(self):
         self.p_send = patch(
-            "src.handlers.rooms.get_rooms.send_custom_response",
+            "handlers.rooms.get_rooms.send_custom_response",
             side_effect=lambda status_code, message=None, data=None: {
                 "statusCode": status_code,
                 "body": json.dumps({"message": message, "data": data})
             }
         )
         self.p_get = patch.object(self.mod.room_service, "get_available_rooms")
-        self.p_parse = patch("src.handlers.rooms.get_rooms._parse_iso_datetime")
+        self.p_parse = patch("handlers.rooms.get_rooms._parse_iso_datetime")
         self.mock_send = self.p_send.start()
         self.mock_get = self.p_get.start()
         self.mock_parse = self.p_parse.start()

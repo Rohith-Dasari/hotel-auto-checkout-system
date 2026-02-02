@@ -2,17 +2,17 @@ import importlib, json, os, unittest
 from unittest.mock import MagicMock, patch
 from botocore.exceptions import ClientError
 from pydantic import ValidationError
-from src.common.utils.custom_exceptions import UserAlreadyExists
+from common.utils.custom_exceptions import UserAlreadyExists
 
 class SignupHandlerTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.env = patch.dict(os.environ, {"TABLE_NAME": "test-table"}, clear=False)
         cls.env.start()
-        cls.resource = patch("src.handlers.auth.signup.resource")
+        cls.resource = patch("handlers.auth.signup.resource")
         mock_resource = cls.resource.start()
         mock_resource.return_value.Table.return_value = MagicMock()
-        import src.handlers.auth.signup as signup_module
+        import handlers.auth.signup as signup_module
         cls.mod = importlib.reload(signup_module)
 
     @classmethod
@@ -22,13 +22,13 @@ class SignupHandlerTests(unittest.TestCase):
 
     def setUp(self):
         self.p_send = patch(
-            "src.handlers.auth.signup.send_custom_response",
+            "handlers.auth.signup.send_custom_response",
             side_effect=lambda status_code, message=None, data=None: {
                 "statusCode": status_code,
                 "body": json.dumps({"message": message, "data": data})
             },
         )
-        self.p_validate = patch("src.handlers.auth.signup.SignupRequest.model_validate_json")
+        self.p_validate = patch("handlers.auth.signup.SignupRequest.model_validate_json")
         self.p_signup = patch.object(self.mod.service, "signup")
         self.mock_send = self.p_send.start()
         self.mock_validate = self.p_validate.start()

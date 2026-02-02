@@ -4,8 +4,8 @@ import os
 import unittest
 from unittest.mock import MagicMock, patch
 
-from src.common.models.rooms import Category
-from src.common.utils.custom_exceptions import NotFoundException, NoAvailableRooms
+from common.models.rooms import Category
+from common.utils.custom_exceptions import NotFoundException, NoAvailableRooms
 
 
 class CreateBookingTests(unittest.TestCase):
@@ -21,10 +21,10 @@ class CreateBookingTests(unittest.TestCase):
             clear=False,
         )
         cls.env.start()
-        cls.resource = patch("src.handlers.bookings.create_booking.resource")
+        cls.resource = patch("handlers.bookings.create_booking.resource")
         mock_res = cls.resource.start()
         mock_res.return_value.Table.return_value = MagicMock()
-        import src.handlers.bookings.create_booking as mod
+        import handlers.bookings.create_booking as mod
         cls.mod = importlib.reload(mod)
 
     @classmethod
@@ -34,14 +34,14 @@ class CreateBookingTests(unittest.TestCase):
 
     def setUp(self):
         self.p_send = patch(
-            "src.handlers.bookings.create_booking.send_custom_response",
+            "handlers.bookings.create_booking.send_custom_response",
             side_effect=lambda status_code, message=None, data=None: {
                 "statusCode": status_code,
                 "body": json.dumps({"message": message, "data": data}),
             },
         )
         self.p_add = patch.object(self.mod.booking_service, "add_booking")
-        self.p_validate = patch("src.handlers.bookings.create_booking.BookingRequest.model_validate_json")
+        self.p_validate = patch("handlers.bookings.create_booking.BookingRequest.model_validate_json")
         self.mock_send = self.p_send.start()
         self.mock_add = self.p_add.start()
         self.mock_validate = self.p_validate.start()

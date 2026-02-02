@@ -2,15 +2,15 @@ import unittest
 from unittest.mock import MagicMock, patch
 from datetime import datetime, timezone, timedelta
 
-from src.common.services.invoice_service import InvoiceService
-from src.common.models.bookings import Booking
-from src.common.models.rooms import Category
-from src.common.utils.custom_exceptions import NotFoundException
+from common.services.invoice_service import InvoiceService
+from common.models.bookings import Booking
+from common.models.rooms import Category
+from common.utils.custom_exceptions import NotFoundException
 
 
 class TestInvoiceService(unittest.TestCase):
 
-    @patch("src.common.services.invoice_service.boto3.client")
+    @patch("common.services.invoice_service.boto3.client")
     def setUp(self, mock_boto_client):
         self.mock_ses = MagicMock()
         mock_boto_client.return_value = self.mock_ses

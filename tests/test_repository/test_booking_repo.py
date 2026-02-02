@@ -4,9 +4,9 @@ from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 from botocore.exceptions import ClientError
 
-from src.common.repository.booking_repo import BookingRepository
-from src.common.models.bookings import Booking, BookingStatus
-from src.common.models.rooms import Category, RoomStatus
+from common.repository.booking_repo import BookingRepository
+from common.models.bookings import Booking, BookingStatus
+from common.models.rooms import Category, RoomStatus
 
 
 class TestBookingRepository(unittest.TestCase):

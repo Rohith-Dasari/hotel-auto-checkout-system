@@ -1,6 +1,6 @@
 import unittest
 from datetime import datetime, timezone
-from src.common.utils.datetime_normaliser import from_iso_string
+from common.utils.datetime_normaliser import from_iso_string
 
 class TestDatetimeNormaliser(unittest.TestCase):
     def test_from_iso_string_with_timezone(self):
