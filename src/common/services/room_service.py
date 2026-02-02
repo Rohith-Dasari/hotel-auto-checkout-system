@@ -1,7 +1,7 @@
-from src.common.repository.room_repo import RoomRepository
-from src.common.models.rooms import RoomStatus, Category,Room
+from common.repository.room_repo import RoomRepository
+from common.models.rooms import RoomStatus, Category,Room
 from typing import List, Optional
-from src.common.utils.custom_exceptions import NoAvailableRooms, InvalidDates
+from common.utils.custom_exceptions import NoAvailableRooms, InvalidDates
 from datetime import datetime, timezone
 
 

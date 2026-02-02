@@ -15,7 +15,7 @@ Globals:
       - arm64
     Timeout: 20
     Runtime: python3.13
-    CodeUri: src/
+    CodeUri: ../src
     Layers:
       - !Ref DepsLayer
 
@@ -35,7 +35,12 @@ Resources:
       ContentUri: ../layers/deps
       CompatibleRuntimes:
         - python3.13
+      CompatibleArchitectures:
+        - arm64
       RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: python3.13
+      BuildArchitecture: arm64
 
   ApiGateway:
     Type: AWS::Serverless::Api
@@ -57,7 +62,7 @@ Resources:
   AuthFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src.handlers.auth.jwt_authorizer.lambda_handler
+      Handler: handlers.auth.jwt_authorizer.lambda_handler
       Environment:
         Variables:
           JWT_SECRET: !Ref JwtSecret
@@ -97,7 +102,7 @@ Resources:
   LoginFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src.handlers.auth.login.login_handler
+      Handler: handlers.auth.login.login_handler
       Events:
         ApiEvent:
           Type: Api
@@ -114,7 +119,7 @@ Resources:
   SignupFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src.handlers.auth.signup.signup_handler
+      Handler: handlers.auth.signup.signup_handler
       Events:
         ApiEvent:
           Type: Api
@@ -131,7 +136,7 @@ Resources:
   AddRoomFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src.handlers.rooms.add_room.add_room
+      Handler: handlers.rooms.add_room.add_room
       Events:
         ApiEvent:
           Type: Api
@@ -146,7 +151,7 @@ Resources:
   GetRoomsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src.handlers.rooms.get_rooms.get_rooms
+      Handler: handlers.rooms.get_rooms.get_rooms
       Events:
         ApiEvent:
           Type: Api
@@ -161,7 +166,7 @@ Resources:
   UpdateRoomFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src.handlers.rooms.update_room.update_room
+      Handler: handlers.rooms.update_room.update_room
       Events:
         ApiEvent:
           Type: Api
@@ -178,7 +183,7 @@ Resources:
   CreateBookingFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src.handlers.bookings.create_booking.create_booking
+      Handler: handlers.bookings.create_booking.create_booking
       Environment:
         Variables:
           AUTO_CHECKOUT_LAMBDA_ARN: !GetAtt AutoCheckoutFunction.Arn
@@ -208,7 +213,7 @@ Resources:
   ListBookingsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src.handlers.bookings.get_bookings.get_user_bookings
+      Handler: handlers.bookings.get_bookings.get_user_bookings
       Events:
         ApiEvent:
           Type: Api
@@ -224,7 +229,7 @@ Resources:
   AutoCheckoutFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src.handlers.checkout.auto_checkout.auto_checkout
+      Handler: handlers.checkout.auto_checkout.auto_checkout
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref TableName

@@ -2,8 +2,8 @@
 # import logging
 # from typing import Optional, List
 # from boto3.dynamodb.conditions import Key
-# from src.common.models.bookings import Booking, BookingStatus
-# from src.common.models.rooms import Category, RoomStatus
+# from common.models.bookings import Booking, BookingStatus
+# from common.models.rooms import Category, RoomStatus
 # from decimal import Decimal
 # from datetime import datetime, timezone
 # from typing import TYPE_CHECKING

@@ -2,7 +2,7 @@ from botocore.exceptions import ClientError
 import logging
 from typing import Optional
 from boto3.dynamodb.conditions import Key
-from src.common.models.users import User, UserRole
+from common.models.users import User, UserRole
 
 from typing import TYPE_CHECKING
 

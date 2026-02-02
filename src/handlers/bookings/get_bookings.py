@@ -1,13 +1,13 @@
 import os
 from boto3 import resource
 
-from src.common.repository.booking_repo import BookingRepository
-from src.common.repository.user_repo import UserRepository
-from src.common.repository.room_repo import RoomRepository
-from src.common.services.booking_service import BookingService
-from src.common.models.users import UserRole
-from src.common.utils.custom_response import send_custom_response
-from src.common.utils.custom_exceptions import NotFoundException
+from common.repository.booking_repo import BookingRepository
+from common.repository.user_repo import UserRepository
+from common.repository.room_repo import RoomRepository
+from common.services.booking_service import BookingService
+from common.models.users import UserRole
+from common.utils.custom_response import send_custom_response
+from common.utils.custom_exceptions import NotFoundException
 
 TABLE_NAME = os.environ.get("TABLE_NAME")
 

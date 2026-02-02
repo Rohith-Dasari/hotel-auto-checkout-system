@@ -1,9 +1,9 @@
 import os
-from src.common.repository.user_repo import UserRepository
-from src.common.services.user_service import UserService
-from src.common.schemas.users import  LoginRequest
-from src.common.utils.custom_exceptions import IncorrectCredentials,NotFoundException
-from src.common.utils.custom_response import send_custom_response 
+from common.repository.user_repo import UserRepository
+from common.services.user_service import UserService
+from common.schemas.users import  LoginRequest
+from common.utils.custom_exceptions import IncorrectCredentials,NotFoundException
+from common.utils.custom_response import send_custom_response 
 from pydantic import ValidationError
 from botocore.exceptions import ClientError
 from boto3 import resource

@@ -1,10 +1,10 @@
 import os
-from src.common.services.booking_service import BookingService
-from src.common.repository.booking_repo import BookingRepository
-from src.common.repository.user_repo import UserRepository
-from src.common.repository.room_repo import RoomRepository
-from src.common.services.invoice_service import InvoiceService
-from src.common.utils.custom_exceptions import NotFoundException
+from common.services.booking_service import BookingService
+from common.repository.booking_repo import BookingRepository
+from common.repository.user_repo import UserRepository
+from common.repository.room_repo import RoomRepository
+from common.services.invoice_service import InvoiceService
+from common.utils.custom_exceptions import NotFoundException
 from boto3 import resource
 from botocore.exceptions import ClientError
 

@@ -1,7 +1,7 @@
 from typing import Optional
-from src.common.models.users import User, UserRole
-from src.common.repository.user_repo import UserRepository
-from src.common.utils.custom_exceptions import (
+from common.models.users import User, UserRole
+from common.repository.user_repo import UserRepository
+from common.utils.custom_exceptions import (
     IncorrectCredentials,
     UserAlreadyExists,
     NotFoundException,
@@ -9,7 +9,7 @@ from src.common.utils.custom_exceptions import (
 import bcrypt
 import re
 import uuid
-from src.common.utils.jwt_service import create_jwt
+from common.utils.jwt_service import create_jwt
 
 PASSWORD_REGEX = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,}$")
 

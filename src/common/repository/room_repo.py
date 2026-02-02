@@ -2,11 +2,11 @@ from botocore.exceptions import ClientError
 import logging
 from typing import Optional, List
 from boto3.dynamodb.conditions import Key
-from src.common.models.rooms import Room, Category, RoomStatus
+from common.models.rooms import Room, Category, RoomStatus
 from datetime import datetime, timezone, timedelta
-from src.common.utils.custom_exceptions import NotFoundException
-from src.common.utils.constants import MAX_STAY
-from src.common.utils.datetime_normaliser import from_iso_string
+from common.utils.custom_exceptions import NotFoundException
+from common.utils.constants import MAX_STAY
+from common.utils.datetime_normaliser import from_iso_string
 
 from typing import TYPE_CHECKING
 

@@ -1,11 +1,11 @@
 import os
 from datetime import datetime
 from boto3 import resource
-from src.common.repository.room_repo import RoomRepository
-from src.common.services.room_service import RoomService
-from src.common.models.rooms import Category
-from src.common.models.users import UserRole
-from src.common.utils.custom_response import send_custom_response
+from common.repository.room_repo import RoomRepository
+from common.services.room_service import RoomService
+from common.models.rooms import Category
+from common.models.users import UserRole
+from common.utils.custom_response import send_custom_response
 import json
 from botocore.exceptions import ClientError
 

@@ -2,9 +2,9 @@
 # import logging
 # from typing import Optional, List
 # from boto3.dynamodb.conditions import Key
-# from src.common.models.rooms import Room, Category, RoomStatus
+# from common.models.rooms import Room, Category, RoomStatus
 # from datetime import datetime, timezone
-# from src.common.utils.custom_exceptions import NotFoundException
+# from common.utils.custom_exceptions import NotFoundException
 
 
 # from typing import TYPE_CHECKING

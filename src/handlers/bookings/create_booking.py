@@ -2,15 +2,15 @@ import json
 import os
 from boto3 import resource
 
-from src.common.repository.booking_repo import BookingRepository
-from src.common.repository.user_repo import UserRepository
-from src.common.repository.room_repo import RoomRepository
-from src.common.services.booking_service import BookingService
-from src.common.models.rooms import Category
-from src.common.services.schedule_service import SchedulerService
-from src.common.schemas.bookings import BookingRequest
-from src.common.utils.custom_response import send_custom_response
-from src.common.utils.custom_exceptions import NotFoundException, NoAvailableRooms
+from common.repository.booking_repo import BookingRepository
+from common.repository.user_repo import UserRepository
+from common.repository.room_repo import RoomRepository
+from common.services.booking_service import BookingService
+from common.models.rooms import Category
+from common.services.schedule_service import SchedulerService
+from common.schemas.bookings import BookingRequest
+from common.utils.custom_response import send_custom_response
+from common.utils.custom_exceptions import NotFoundException, NoAvailableRooms
 from pydantic import ValidationError
 
 TABLE_NAME = os.environ.get("TABLE_NAME")

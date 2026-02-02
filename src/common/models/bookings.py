@@ -2,7 +2,7 @@ from enum import Enum
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional
-from src.common.models.rooms import Category
+from common.models.rooms import Category
 
 
 class BookingStatus(str, Enum):

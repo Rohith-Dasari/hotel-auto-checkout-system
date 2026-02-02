@@ -1,12 +1,12 @@
-from src.common.repository.booking_repo import BookingRepository
-from src.common.models.bookings import Booking, BookingStatus
-from src.common.schemas.bookings import BookingRequest
-from src.common.models.rooms import Category
+from common.repository.booking_repo import BookingRepository
+from common.models.bookings import Booking, BookingStatus
+from common.schemas.bookings import BookingRequest
+from common.models.rooms import Category
 from typing import List,Optional
-from src.common.repository.user_repo import UserRepository
-from src.common.repository.room_repo import RoomRepository
-from src.common.utils.custom_exceptions import NotFoundException,NoAvailableRooms
-from src.common.services.schedule_service import SchedulerService
+from common.repository.user_repo import UserRepository
+from common.repository.room_repo import RoomRepository
+from common.utils.custom_exceptions import NotFoundException,NoAvailableRooms
+from common.services.schedule_service import SchedulerService
 from uuid import uuid4
 import random
 

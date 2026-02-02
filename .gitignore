@@ -8,3 +8,4 @@ htmlcov
 python
 metc.py
 spiral_matrix.py
+.pytest_cache

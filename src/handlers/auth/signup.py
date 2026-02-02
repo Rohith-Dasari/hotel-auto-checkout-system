@@ -1,9 +1,9 @@
 import os
-from src.common.repository.user_repo import UserRepository
-from src.common.services.user_service import UserService
-from src.common.schemas.users import SignupRequest
-from src.common.utils.custom_exceptions import UserAlreadyExists
-from src.common.utils.custom_response import send_custom_response
+from common.repository.user_repo import UserRepository
+from common.services.user_service import UserService
+from common.schemas.users import SignupRequest
+from common.utils.custom_exceptions import UserAlreadyExists
+from common.utils.custom_response import send_custom_response
 from boto3 import resource
 from pydantic import ValidationError
 from botocore.exceptions import ClientError

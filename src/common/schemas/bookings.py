@@ -1,6 +1,6 @@
 from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel, model_validator
-from src.common.utils.constants import MAX_STAY
+from common.utils.constants import MAX_STAY
 
 class BookingRequest(BaseModel):
     category: str

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from src.common.models.rooms import Category
+from common.models.rooms import Category
 
 
 @dataclass

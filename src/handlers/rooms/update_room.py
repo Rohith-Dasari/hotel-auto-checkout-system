@@ -1,13 +1,13 @@
 import json
 import os
 from boto3 import resource
-from src.common.repository.room_repo import RoomRepository
-from src.common.services.room_service import RoomService
-from src.common.models.rooms import RoomStatus
-from src.common.utils.custom_response import send_custom_response
-from src.common.utils.custom_exceptions import NotFoundException
+from common.repository.room_repo import RoomRepository
+from common.services.room_service import RoomService
+from common.models.rooms import RoomStatus
+from common.utils.custom_response import send_custom_response
+from common.utils.custom_exceptions import NotFoundException
 from botocore.exceptions import ClientError
-from src.common.models.users import UserRole
+from common.models.users import UserRole
 
 TABLE_NAME = os.environ.get("TABLE_NAME")
 
