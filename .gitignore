@@ -1,11 +1,7 @@
 __pycache__
 .env
-prac.py
 samconfig.toml
 .aws-sam
 htmlcov
 .coverage
-python
-metc.py
-spiral_matrix.py
 .pytest_cache
