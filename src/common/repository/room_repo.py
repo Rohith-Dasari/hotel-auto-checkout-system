@@ -4,7 +4,7 @@ from typing import Optional, List
 from boto3.dynamodb.conditions import Key
 from common.models.rooms import Room, Category, RoomStatus
 from datetime import datetime, timezone, timedelta
-from common.utils.custom_exceptions import NotFoundException
+from common.utils.custom_exceptions import NotFoundException,RoomAlreadyExists
 from common.utils.constants import MAX_STAY
 from common.utils.datetime_normaliser import from_iso_string
 
@@ -55,8 +55,15 @@ class RoomRepository:
                     },
                 ]
             )
-        except ClientError as err:
-            logger.error(f"Error creating booking {room.room_id}: {err}")
+        except ClientError as e:
+            logger.error(f"Error creating booking {room.room_id}: {e}")
+            if e.response['Error']['Code'] == 'TransactionCanceledException':
+                cancellation_reasons = e.response.get('CancellationReasons', [])
+                for reason in cancellation_reasons:
+                    if reason.get('Code') == 'ConditionalCheckFailed':
+                        raise RoomAlreadyExists(room.room_id)
+                    else:
+                        raise          
             raise
 
     def get_room_by_id(self, room_id: str) -> Optional[Room]:
@@ -121,6 +128,7 @@ class RoomRepository:
                 },
                 ConditionExpression="attribute_exists(pk)",
             )
+        
         except ClientError as err:
             if (
                 err.response.get("Error", {}).get("Code")

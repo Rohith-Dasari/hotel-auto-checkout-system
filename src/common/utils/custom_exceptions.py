@@ -23,3 +23,6 @@ class NoAvailableRooms(Exception):
 
 class InvalidDates(Exception):
     pass
+
+class RoomAlreadyExists(Exception):
+    pass

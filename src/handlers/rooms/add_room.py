@@ -8,6 +8,7 @@ from common.models.users import UserRole
 from common.utils.custom_response import send_custom_response
 import json
 from botocore.exceptions import ClientError
+from common.utils.custom_exceptions import RoomAlreadyExists
 
 TABLE_NAME = os.environ.get("TABLE_NAME")
 
@@ -53,10 +54,10 @@ def add_room(event,context):
 
     try:
         room_service.add_room(room_id=room_id, category=category)
+    except RoomAlreadyExists as e:
+        return send_custom_response(400, f"Room with id {room_id} already exists")
+        
     except ClientError as err:
-        error_code = err.response["Error"].get("Code", "")
-        if error_code == "ConditionalCheckFailedException":
-            return send_custom_response(400, f"Room with id {room_id} already exists")
         return send_custom_response(500, f"Internal server error: {str(err)}")
     except Exception as e:
         return send_custom_response(500, f"Internal server error: {str(e)}")
