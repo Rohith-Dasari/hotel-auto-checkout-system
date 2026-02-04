@@ -21,8 +21,14 @@ def signup_handler(event, context):
     try:
         request_body = SignupRequest.model_validate_json(event["body"])
     except ValidationError as e:
-        return send_custom_response(400, e.errors())
-    
+        formatted = "; ".join(
+            f"{'.'.join(map(str, err['loc']))}: {err['msg']}" for err in e.errors()
+        )
+        return send_custom_response(400, formatted)
+
+    except ValueError as e:
+        return send_custom_response(400, str(e))
+
     try:
         token = service.signup(
             request_body.email,
@@ -30,12 +36,16 @@ def signup_handler(event, context):
             request_body.password,
             request_body.phone_number,
         )
-        return send_custom_response(status_code=201, message="signup successful", data=token)
+        return send_custom_response(
+            status_code=201, message="signup successful", data=token
+        )
     except ClientError as e:
-        return send_custom_response(status_code=500,message=str(e))
+        return send_custom_response(status_code=500, message=str(e))
     except ValueError as e:
         return send_custom_response(status_code=400, message=str(e))
     except UserAlreadyExists as e:
         return send_custom_response(status_code=403, message=str(e))
     except Exception as e:
-        return send_custom_response(status_code=500, message=f"Internal server error: {str(e)}")
+        return send_custom_response(
+            status_code=500, message=f"Internal server error: {str(e)}"
+        )

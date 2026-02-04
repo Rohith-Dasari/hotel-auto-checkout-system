@@ -40,7 +40,9 @@ def create_booking(event, context):
     try:
         request_body = BookingRequest.model_validate_json(event["body"])
     except ValidationError as e:
-        return send_custom_response(400, e.errors())
+        formatted = "; ".join(f"{err['msg']}" for err in e.errors())
+        return send_custom_response(400, formatted)
+
     except ValueError as e:
         return send_custom_response(400, str(e))
     try:

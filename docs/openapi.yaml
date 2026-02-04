@@ -1,0 +1,547 @@
+openapi: 3.0.3
+info:
+  title: Hotel Checkout System API
+  description: |
+    API for managing authentication, room availability, and hotel bookings.
+    Supports role-based access for MANAGER and CUSTOMER using JWT Bearer tokens.
+
+    Standard Response Format:
+    All endpoints return:
+      {
+        "status_code": number,
+        "message": string,
+        "data": object (optional)
+      }
+
+    Exception:
+    Missing/Invalid token returns:
+      {
+        "message": "Unauthorized"
+      }
+  version: "1.1.0"
+
+servers:
+  - url: http://localhost:8000
+    description: Local development
+  - url: https://api.yourdomain.com
+    description: Production
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+
+    # ------------------
+    # BASE SCHEMAS
+    # ------------------
+
+    StandardResponse:
+      type: object
+      required: [status_code, message]
+      properties:
+        status_code:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: Operation successful
+        data:
+          type: object
+          nullable: true
+
+    UnauthorizedResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          example: Unauthorized
+
+    # ------------------
+    # AUTH
+    # ------------------
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          example: rohithdasariformal@gmail.com
+        password:
+          type: string
+          example: Pass@1234567890
+
+    LoginSuccessResponse:
+      allOf:
+        - $ref: "#/components/schemas/StandardResponse"
+        - type: object
+          properties:
+            data:
+              type: string
+              description: JWT token
+              example: eyJhbGciOiJIUzI1NiIsInR5cCI6...
+
+    SignupRequest:
+      type: object
+      required: [username, email, phone_number, password]
+      properties:
+        username:
+          type: string
+          example: uday
+        email:
+          type: string
+          example: uday@gmail.com
+        phone_number:
+          type: string
+          example: "1234567890"
+          minLength: 10
+        password:
+          type: string
+          example: Pass@1234567890
+
+    # ------------------
+    # ROOMS
+    # ------------------
+
+    Room:
+      type: object
+      properties:
+        room_id:
+          type: string
+          example: "101"
+        category:
+          type: string
+          example: DELUXE
+        status:
+          type: string
+          example: AVAILABLE
+
+    RoomsDataManager:
+      type: object
+      properties:
+        available_rooms:
+          type: array
+          items:
+            $ref: "#/components/schemas/Room"
+
+    RoomsDataCustomer:
+      type: object
+      properties:
+        rooms:
+          type: array
+          items:
+            $ref: "#/components/schemas/Room"
+
+    RoomsResponseManager:
+      allOf:
+        - $ref: "#/components/schemas/StandardResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/RoomsDataManager"
+
+    RoomsResponseCustomer:
+      allOf:
+        - $ref: "#/components/schemas/StandardResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/RoomsDataCustomer"
+
+    AddRoomRequest:
+      type: object
+      required: [room_id, category]
+      properties:
+        room_id:
+          type: string
+          example: "101"
+        category:
+          type: string
+          example: DELUXE
+
+    UpdateRoomRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          example: AVAILABLE
+
+    # ------------------
+    # BOOKINGS
+    # ------------------
+
+    BookingRequest:
+      type: object
+      required: [category, checkin, checkout]
+      properties:
+        category:
+          type: string
+          example: DELUXE
+        checkin:
+          type: string
+          format: date-time
+          example: "2026-03-20T18:54:00+05:30"
+        checkout:
+          type: string
+          format: date-time
+          example: "2026-03-30T18:55:00+05:30"
+
+    Booking:
+      type: object
+      properties:
+        booking_id:
+          type: string
+          example: "009ce605-64b6-4f7b-aa32-d4670a1e635b"
+        room_id:
+          type: string
+          example: "101"
+        category:
+          type: string
+          example: DELUXE
+        status:
+          type: string
+          example: UPCOMING
+        checkin:
+          type: string
+          format: date-time
+        checkout:
+          type: string
+          format: date-time
+        price_per_night:
+          type: string
+          example: "500.0"
+        booked_at:
+          type: string
+          format: date-time
+
+    UserBookingsData:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 1
+        bookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"
+
+    UserBookingsResponse:
+      allOf:
+        - $ref: "#/components/schemas/StandardResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/UserBookingsData"
+
+paths:
+
+  # ------------------
+  # AUTH
+  # ------------------
+
+  /login:
+    post:
+      summary: User login
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginSuccessResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+              example:
+                status_code: 401
+                message: Invalid email or password
+
+  /signup:
+    post:
+      summary: User signup
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignupRequest"
+      responses:
+        "201":
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+        "400":
+          description: Invalid field value
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+              example:
+                status_code: 400
+                message: "phone_number: String should have at least 10 characters"
+        "403":
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+              example:
+                status_code: 403
+                message: email is already in use
+
+  # ------------------
+  # ROOMS
+  # ------------------
+
+  /rooms:
+    get:
+      summary: Get rooms by availability and category
+      tags: [Rooms]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: checkin
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: checkout
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: category
+          in: query
+          required: true
+          schema:
+            type: string
+            example: DELUXE
+      responses:
+        "200":
+          description: Rooms retrieved
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/RoomsResponseManager"
+                  - $ref: "#/components/schemas/RoomsResponseCustomer"
+        "400":
+          description: Invalid check-in date
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+              example:
+                status_code: 400
+                message: checkin cannot be in past
+        "401":
+          description: Unauthorized (No token or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+
+    post:
+      summary: Add a new room (Manager only)
+      tags: [Rooms]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddRoomRequest"
+      responses:
+        "201":
+          description: Room added successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+              example:
+                status_code: 201
+                message: Room 102 added successfully
+        "400":
+          description: Room already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+              example:
+                status_code: 400
+                message: Room with id 101 already exists
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden (Customer trying manager action)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+              example:
+                status_code: 403
+                message: Forbidden
+
+  /rooms/{room_id}:
+    put:
+      summary: Update room status (Manager only)
+      tags: [Rooms]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: room_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "018"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRoomRequest"
+      responses:
+        "200":
+          description: Room updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+              example:
+                status_code: 403
+                message: Forbidden
+
+  # ------------------
+  # BOOKINGS
+  # ------------------
+
+  /bookings:
+    post:
+      summary: Create a booking (Customer only)
+      tags: [Bookings]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingRequest"
+      responses:
+        "201":
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+              example:
+                status_code: 201
+                message: Booking created successfully
+        "400":
+          description: Invalid date values
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+              example:
+                status_code: 400
+                message: Value error, checkin must be in the future
+        "404":
+          description: No available rooms
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+              example:
+                status_code: 404
+                message: no available rooms for the category
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+
+  /users/{user_id}/bookings:
+    get:
+      summary: Get bookings for a user
+      tags: [Bookings]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 53533cf4-b7ea-4257-b44e-ec57bb2c864e
+      responses:
+        "200":
+          description: Bookings retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserBookingsResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "403":
+          description: Customer accessing other user's bookings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+              example:
+                status_code: 403
+                message: Forbidden
+        "404":
+          description: User not found (Manager access)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardResponse"
+              example:
+                status_code: 404
+                message: "user '53533cf4-b7ea-4257-b44e-ec57bb2c864' not found"

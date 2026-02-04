@@ -19,7 +19,7 @@ room_service = RoomService(room_repo=room_repo)
 
 
 def update_room(event, context):
-    
+
     try:
         role_raw = event["requestContext"]["authorizer"]["role"]
     except KeyError:
@@ -37,53 +37,34 @@ def update_room(event, context):
     room_id = path_params.get("room_id")
 
     if not room_id:
-        return send_custom_response(
-            400,
-            "room_id is required in the path"
-        )
+        return send_custom_response(400, "room_id is required in the path")
 
     if not event.get("body"):
-        return send_custom_response(
-            400,
-            "Request body is required"
-        )
+        return send_custom_response(400, "Request body is required")
 
     try:
         body = json.loads(event["body"])
     except json.JSONDecodeError:
-        return send_custom_response(
-            400,
-            "Invalid JSON body"
-        )
+        return send_custom_response(400, "Invalid JSON body")
 
     status_raw = body.get("status")
 
     if not status_raw:
-        return send_custom_response(
-            400,
-            "status is required"
-        )
+        return send_custom_response(400, "status is required")
 
     try:
         status = RoomStatus(status_raw.upper())
     except ValueError:
         return send_custom_response(
-            400,
-            f"Invalid status. Allowed: {[s.value for s in RoomStatus]}"
+            400, f"Invalid status. Allowed: {[s.value for s in RoomStatus]}"
         )
     try:
-        room_service.update_room_status(
-            room_id=room_id,
-            status=status
-        )
+        room_service.update_room_status(room_id=room_id, status=status)
 
         return send_custom_response(
             200,
             "Room status updated successfully",
-            {
-                "room_id": room_id,
-                "new_status": status.value
-            }
+            {"room_id": room_id, "new_status": status.value},
         )
 
     except NotFoundException as err:
@@ -93,7 +74,4 @@ def update_room(event, context):
         return send_custom_response(500, "Internal server error")
     except Exception as err:
         print("Unhandled error:", err)
-        return send_custom_response(
-            500,
-            "Internal server error"
-        )
+        return send_custom_response(500, "Internal server error")

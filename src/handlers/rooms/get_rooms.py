@@ -1,5 +1,5 @@
 import os
-from datetime import datetime,timezone
+from datetime import datetime, timezone
 from boto3 import resource
 
 from common.repository.room_repo import RoomRepository
@@ -48,8 +48,7 @@ def get_rooms(event, context):
 
         if not category_raw or not checkin or not checkout:
             return send_custom_response(
-                400,
-                "category, checkin and checkout are required"
+                400, "category, checkin and checkout are required"
             )
 
         try:
@@ -62,56 +61,32 @@ def get_rooms(event, context):
             category = Category(category_raw.upper())
         except ValueError:
             allowed = ", ".join(c.value for c in Category)
-            return send_custom_response(
-                400,
-                f"Invalid category. Allowed: {allowed}"
-            )
-
-        if checkout_dt <= checkin_dt:
-            return send_custom_response(400, "checkout must be after checkin")
+            return send_custom_response(400, f"Invalid category. Allowed: {allowed}")
 
         rooms = room_service.get_available_rooms(
-            category=category,
-            checkin=checkin_dt,
-            checkout=checkout_dt
+            category=category, checkin=checkin_dt, checkout=checkout_dt
         )
 
         response_data = {
             "category": category.value,
             "checkin": checkin_dt.isoformat(),
             "checkout": checkout_dt.isoformat(),
-            "count": len(rooms)
+            "count": len(rooms),
         }
 
         if role != UserRole.CUSTOMER:
             response_data["available_rooms"] = rooms
 
-        return send_custom_response(
-            200,
-            "successfully retrieved",
-            response_data
-        )
+        return send_custom_response(200, "successfully retrieved", response_data)
 
     except NoAvailableRooms as err:
-        return send_custom_response(
-            404,
-            str(err)
-        )
+        return send_custom_response(404, str(err))
 
     except InvalidDates as err:
-        return send_custom_response(
-            400,
-            str(err)
-        )
+        return send_custom_response(400, str(err))
     except ValueError as err:
-        return send_custom_response(
-            400,
-            str(err)
-        )
+        return send_custom_response(400, str(err))
 
     except Exception as err:
         print("Unhandled error:", err)
-        return send_custom_response(
-            500,
-            "Internal server error"
-        )
+        return send_custom_response(500, "Internal server error")

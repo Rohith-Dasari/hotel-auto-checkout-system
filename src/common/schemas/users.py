@@ -8,7 +8,7 @@ PASSWORD_REGEX = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).
 class SignupRequest(BaseModel):
     email: EmailStr
     username: str = Field(min_length=3, max_length=30)
-    phone_number: str = Field(min_length=10,max_length=10)
+    phone_number: str = Field(min_length=10, max_length=10)
     password: str
 
     @field_validator("password")
@@ -25,4 +25,3 @@ class SignupRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
-
