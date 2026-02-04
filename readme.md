@@ -4,6 +4,9 @@
 Design a backend service to manage hotel room bookings and automatic guest checkouts.  
 The system tracks booking lifecycles and room availability, automatically triggers check-out when the booking period ends, generates a simple invoice on checkout, and updates room status accordingly.
 
+## Swagger Docs
+[![API Docs](https://img.shields.io/badge/API-Swagger-green)](https://rohith-dasari.github.io/hotel-auto-checkout-system/)
+
 ---
 
 ## System Architecture
@@ -28,5 +31,4 @@ The system tracks booking lifecycles and room availability, automatically trigge
 ## DynamoDB Schema
 <img src="images/ddb_schema.png" width="850"/>
 
-## Swagger Docs
-[![API Docs](https://img.shields.io/badge/API-Swagger-green)](https://rohith-dasari.github.io/hotel-auto-checkout-system/)
+
