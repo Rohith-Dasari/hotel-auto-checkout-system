@@ -72,6 +72,16 @@ components:
               description: JWT token
               example: eyJhbGciOiJIUzI1NiIsInR5cCI6...
 
+    SignupSuccessResponse:
+      allOf:
+        - $ref: "#/components/schemas/StandardResponse"
+        - type: object
+          properties:
+            data:
+              type: string
+              description: JWT token
+              example: eyJhbGciOiJIUzI1NiIsInR5cCI6...
+
     SignupRequest:
       type: object
       required: [username, email, phone_number, password]
@@ -94,34 +104,46 @@ components:
     # ROOMS
     # ------------------
 
-    Room:
-      type: object
-      properties:
-        room_id:
-          type: string
-          example: "101"
-        category:
-          type: string
-          example: DELUXE
-        status:
-          type: string
-          example: AVAILABLE
-
     RoomsDataManager:
       type: object
       properties:
+        category:
+          type: string
+          example: DELUXE
+        checkin:
+          type: string
+          format: date-time
+          example: "2026-03-25T14:30:00+00:00"
+        checkout:
+          type: string
+          format: date-time
+          example: "2026-03-26T05:30:00+00:00"
+        count:
+          type: integer
+          example: 2
         available_rooms:
           type: array
           items:
-            $ref: "#/components/schemas/Room"
+            type: string
+            example: "001"
 
     RoomsDataCustomer:
       type: object
       properties:
-        rooms:
-          type: array
-          items:
-            $ref: "#/components/schemas/Room"
+        category:
+          type: string
+          example: DELUXE
+        checkin:
+          type: string
+          format: date-time
+          example: "2026-03-25T14:30:00+00:00"
+        checkout:
+          type: string
+          format: date-time
+          example: "2026-03-26T05:30:00+00:00"
+        count:
+          type: integer
+          example: 2
 
     RoomsResponseManager:
       allOf:
@@ -244,6 +266,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LoginSuccessResponse"
+              example:
+                status_code: 200
+                message: login successful
+                data: eyJhbGciOiJIUzI1NiIsInR5cCI6...
         "401":
           description: Invalid credentials
           content:
@@ -270,7 +296,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/StandardResponse"
+                $ref: "#/components/schemas/SignupSuccessResponse"
+              example:
+                status_code: 201
+                message: signup successful
+                data: eyJhbGciOiJIUzI1NiIsInR5cCI6...
         "400":
           description: Invalid field value
           content:

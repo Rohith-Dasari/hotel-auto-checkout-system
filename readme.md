@@ -32,3 +32,6 @@ The system tracks booking lifecycles and room availability, automatically trigge
 <img src="images/ddb_schema.png" width="850"/>
 
 
+## Auto Checkout
+On checkout completion, EventBridge Scheduler generates invoice, updates  room status and emails the invoice to the customer. Below is such invoice generated and mailed:
+[images/email.png](images/email.png).
