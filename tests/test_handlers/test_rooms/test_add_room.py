@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 from botocore.exceptions import ClientError
 from common.models.users import UserRole
 from common.models.rooms import Category
+from common.utils.custom_exceptions import RoomAlreadyExists
 
 
 class AddRoomTests(unittest.TestCase):
@@ -81,8 +82,7 @@ class AddRoomTests(unittest.TestCase):
 		self.assertEqual(400, resp["statusCode"])
 
 	def test_duplicate_room_returns_400(self):
-		ce = ClientError({"Error": {"Code": "ConditionalCheckFailedException"}}, "TransactWriteItems")
-		self.mock_add.side_effect = ce
+		self.mock_add.side_effect = RoomAlreadyExists("room1")
 		resp = self.mod.add_room(self._event(), None)
 		self.assertEqual(400, resp["statusCode"])
 

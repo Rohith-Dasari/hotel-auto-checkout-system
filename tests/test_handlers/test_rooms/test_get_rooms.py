@@ -1,4 +1,5 @@
 import importlib, json, os, unittest
+from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 from common.models.users import UserRole
 from common.utils.custom_exceptions import NoAvailableRooms, InvalidDates
@@ -52,7 +53,11 @@ class GetRoomsTests(unittest.TestCase):
         self.assertEqual(400, resp["statusCode"])
 
     def test_checkout_before_checkin(self):
-        self.mock_parse.side_effect = ["2026-01-02", "2026-01-01"]
+        self.mock_parse.side_effect = [
+            datetime(2026, 1, 2, 0, 0, tzinfo=timezone.utc),
+            datetime(2026, 1, 1, 0, 0, tzinfo=timezone.utc),
+        ]
+        self.mock_get.side_effect = InvalidDates("checkout must be after checkin")
         resp = self.mod.get_rooms(self._event(), None)
         self.assertEqual(400, resp["statusCode"])
 

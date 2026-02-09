@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import MagicMock
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from common.services.room_service import RoomService
 from common.models.rooms import Category, RoomStatus
@@ -24,8 +24,8 @@ class TestRoomService(unittest.TestCase):
         )
 
     def test_get_available_rooms_success(self):
-        checkin = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
-        checkout = datetime(2026, 1, 2, 12, 0, tzinfo=timezone.utc)
+        checkin = datetime.now(timezone.utc) + timedelta(days=1)
+        checkout = checkin + timedelta(days=1)
 
         fake_rooms = ["room1", "room2"]
         self.repo.get_available_rooms.return_value = fake_rooms
@@ -40,8 +40,8 @@ class TestRoomService(unittest.TestCase):
         self.assertEqual(result, fake_rooms)
 
     def test_get_available_rooms_checkout_before_checkin(self):
-        checkin = datetime(2026, 1, 2, 12, 0, tzinfo=timezone.utc)
-        checkout = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
+        checkin = datetime.now(timezone.utc) + timedelta(days=2)
+        checkout = checkin - timedelta(days=1)
 
         with self.assertRaises(InvalidDates):
             self.service.get_available_rooms(
@@ -51,8 +51,8 @@ class TestRoomService(unittest.TestCase):
             )
 
     def test_get_available_rooms_no_rooms(self):
-        checkin = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
-        checkout = datetime(2026, 1, 2, 12, 0, tzinfo=timezone.utc)
+        checkin = datetime.now(timezone.utc) + timedelta(days=1)
+        checkout = checkin + timedelta(days=1)
 
         self.repo.get_available_rooms.return_value = []
 
