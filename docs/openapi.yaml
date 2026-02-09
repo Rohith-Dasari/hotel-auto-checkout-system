@@ -13,18 +13,11 @@ info:
         "data": object (optional)
       }
 
-    Exception:
-    Missing/Invalid token returns:
-      {
-        "message": "Unauthorized"
-      }
   version: "1.1.0"
 
 servers:
   - url: http://localhost:8000
     description: Local development
-  - url: https://api.yourdomain.com
-    description: Production
 
 components:
   securitySchemes:
@@ -34,10 +27,6 @@ components:
       bearerFormat: JWT
 
   schemas:
-
-    # ------------------
-    # BASE SCHEMAS
-    # ------------------
 
     StandardResponse:
       type: object
@@ -61,9 +50,6 @@ components:
           type: string
           example: Unauthorized
 
-    # ------------------
-    # AUTH
-    # ------------------
 
     LoginRequest:
       type: object
@@ -241,10 +227,6 @@ components:
 
 paths:
 
-  # ------------------
-  # AUTH
-  # ------------------
-
   /login:
     post:
       summary: User login
@@ -307,10 +289,6 @@ paths:
               example:
                 status_code: 403
                 message: email is already in use
-
-  # ------------------
-  # ROOMS
-  # ------------------
 
   /rooms:
     get:
@@ -450,9 +428,7 @@ paths:
                 status_code: 403
                 message: Forbidden
 
-  # ------------------
-  # BOOKINGS
-  # ------------------
+
 
   /bookings:
     post:

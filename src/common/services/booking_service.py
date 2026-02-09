@@ -62,7 +62,8 @@ class BookingService:
             user_id=user_id,
             room_id=room_id,
             status=BookingStatus.CHECKED_OUT,
-        )
+        )                                          
+                         
     def _allocate_room(self, category: Category, req: BookingRequest) -> str:
         rooms = self.room_repo.get_available_rooms(
             category,
